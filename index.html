@@ -1,0 +1,2209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>EOP Week 11: Designing Professional Presentations &amp; Teleprompter Simulator</title>
+  <style>
+    :root {
+      --bg-dark: #050814;
+      --panel-bg: rgba(10, 16, 32, 0.94);
+      --panel-border: rgba(212, 175, 55, 0.5); /* 90s CLAMP Anime Gold */
+      --gold-bright: #fbbf24;
+      --gold-accent: #d4af37;
+      --blue-accent: #1d4ed8;
+      --blue-glow: #60a5fa;
+      --emerald-green: #10b981;
+      --crimson-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: #02040a;
+      font-family: var(--font-family);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 16:9 HORIZONTAL CINEMATIC VIEWPORT */
+    #vn-viewport {
+      position: relative;
+      width: 100vw;
+      height: 56.25vw; /* 16:9 Landscape */
+      max-height: 100vh;
+      max-width: 177.78vh;
+      background: #000;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(0, 0, 0, 0.95);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+    }
+
+    /* SCREEN MANAGEMENT */
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      z-index: 10;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* FADE TRANSITION OVERLAY */
+    #rpg-fade-overlay {
+      position: absolute;
+      inset: 0;
+      background-color: #000;
+      z-index: 300;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease-in-out;
+    }
+
+    #rpg-fade-overlay.blackout {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* FLOATING TOP HUD (Visible throughout experience) */
+    .top-floating-hud {
+      position: absolute;
+      top: 10px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 150;
+      pointer-events: none;
+    }
+
+    .hud-left, .hud-right {
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .hud-badge {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--gold-accent);
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-hud-pill {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--panel-border);
+      color: #fff;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s;
+    }
+
+    .btn-hud-pill:hover {
+      background: var(--blue-accent);
+      border-color: #fff;
+      transform: translateY(-1px);
+    }
+
+    /* SPLASH SCREEN */
+    #screen-splash {
+      background: radial-gradient(circle at center, #1e3a8a 0%, #050814 100%);
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .splash-box {
+      border: 2px solid var(--gold-accent);
+      padding: 30px 48px;
+      border-radius: 18px;
+      background: var(--panel-bg);
+      box-shadow: 0 0 50px rgba(212, 175, 55, 0.35);
+      backdrop-filter: blur(14px);
+      max-width: 620px;
+    }
+
+    /* TITLE SCREEN */
+    #screen-title {
+      background-size: cover;
+      background-position: center center;
+      background-image: url('images/title_screen_rayearth.webp');
+      background-color: #070d1e;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0 8%;
+    }
+
+    .title-content-card {
+      background: rgba(7, 13, 30, 0.90);
+      border: 1.5px solid var(--panel-border);
+      border-radius: 18px;
+      padding: 28px 34px;
+      max-width: 480px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85);
+    }
+
+    .title-tag {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--gold-bright);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .title-h1 {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      line-height: 1.25;
+      margin-bottom: 8px;
+      color: #fff;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+    }
+
+    .title-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .btn-main-gold {
+      background: linear-gradient(180deg, #d4af37 0%, #b45309 100%);
+      color: #050814;
+      border: 1.5px solid #fde68a;
+      padding: 10px 24px;
+      border-radius: 25px;
+      font-size: 12.5px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+      transition: all 0.2s;
+    }
+
+    .btn-main-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(212, 175, 55, 0.6);
+      color: #000;
+    }
+
+    .btn-secondary {
+      background: rgba(30, 41, 59, 0.75);
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      color: #cbd5e1;
+      padding: 10px 24px;
+      border-radius: 25px;
+      font-size: 12.5px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: #1e293b;
+      color: #fff;
+      border-color: var(--gold-accent);
+    }
+
+    /* REGISTRATION SCREEN */
+    #screen-register {
+      background: #050814;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .reg-card {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 22px;
+      background: var(--panel-bg);
+      border: 1.5px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 780px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      margin-bottom: 12px;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .form-input:focus {
+      border-color: var(--gold-accent);
+    }
+
+    /* DIRECTORY HUB */
+    #screen-hub {
+      background-size: cover;
+      background-position: center;
+      background-image: url('images/bg_office_day.webp');
+      justify-content: space-between;
+      padding: 20px 30px;
+    }
+
+    .hub-header {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      padding: 8px 20px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .hub-menu-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: auto 0;
+    }
+
+    .hub-card {
+      background: var(--panel-bg);
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 220px;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .hub-card:hover:not(.locked) {
+      border-color: var(--gold-accent);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(212, 175, 55, 0.35);
+    }
+
+    .hub-card.locked {
+      opacity: 0.45;
+      cursor: not-allowed;
+      filter: grayscale(0.8);
+    }
+
+    /* VISUAL NOVEL STAGE */
+    #screen-game {
+      position: absolute;
+      inset: 0;
+    }
+
+    .bg-layer {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      z-index: 1;
+      transition: background-image 0.4s ease;
+    }
+
+    /* SPRITE STAGE: 1792x2400 BOTTOM-ANCHORED (Left and Right) */
+    .sprite-stage {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 0 5%;
+      pointer-events: none;
+    }
+
+    .character-sprite {
+      position: absolute;
+      bottom: 0;
+      height: 76%; /* 76% screen height */
+      width: auto;
+      aspect-ratio: 1792 / 2400; /* Exact resolution ratio */
+      object-fit: contain;
+      object-position: bottom center;
+      transition: opacity 0.35s ease, transform 0.35s ease, filter 0.35s ease;
+      filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.85));
+    }
+
+    .character-sprite.left {
+      left: 6%;
+    }
+
+    .character-sprite.right {
+      right: 6%;
+    }
+
+    .character-sprite.active {
+      filter: brightness(1.0) drop-shadow(0 0 14px rgba(212, 175, 55, 0.45));
+      transform: scale(1.0);
+      opacity: 1;
+    }
+
+    .character-sprite.inactive {
+      filter: brightness(0.55);
+      transform: scale(0.96);
+      opacity: 0.85;
+    }
+
+    .character-sprite.hidden {
+      display: none !important;
+      opacity: 0;
+    }
+
+    /* IN-STAGE PROP CARD OVERLAY (3:4 Poster Inspection) */
+    #prop-card-overlay {
+      position: absolute;
+      top: 35px;
+      right: 28%;
+      width: 210px;
+      aspect-ratio: 3 / 4;
+      background: #020617;
+      border: 2px solid var(--gold-accent);
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+      z-index: 8;
+      display: none;
+      overflow: hidden;
+      animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalPop {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    #prop-card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* IN-STAGE COMPARISON / THEORY CARD OVERLAY (Station 3 Examples) */
+    #theory-card-overlay {
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(90%, 640px);
+      background: rgba(10, 16, 32, 0.95);
+      border: 2px solid var(--gold-accent);
+      border-radius: 12px;
+      padding: 14px 18px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.92);
+      z-index: 12;
+      display: none;
+      backdrop-filter: blur(12px);
+      animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* TEXTBOX (Bottom 28% Overlay covering lower waist) */
+    #vn-dialogue-card {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 28%;
+      background: linear-gradient(180deg, rgba(10, 16, 32, 0.92) 0%, rgba(3, 7, 18, 0.98) 100%);
+      border-top: 3px solid var(--gold-accent);
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.85);
+      z-index: 20;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+      padding: 10px 26px;
+    }
+
+    #vn-dialogue-card.single-pane {
+      grid-template-columns: 1fr;
+    }
+
+    .dialogue-main {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .speaker-name-plate {
+      display: inline-block;
+      align-self: flex-start;
+      background: linear-gradient(90deg, #b45309 0%, #d4af37 100%);
+      color: #050814;
+      font-size: 10.5px;
+      font-weight: 900;
+      padding: 3px 12px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 3px;
+    }
+
+    .dialogue-text {
+      font-size: 14px;
+      line-height: 1.45;
+      color: #f8fafc;
+      font-weight: 500;
+    }
+
+    .dialogue-prompt {
+      align-self: flex-end;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--gold-accent);
+      letter-spacing: 1px;
+      animation: pulseAdvance 1.2s infinite alternate;
+    }
+
+    @keyframes pulseAdvance {
+      from { opacity: 0.5; transform: translateX(0); }
+      to { opacity: 1; transform: translateX(4px); }
+    }
+
+    .dialogue-choices {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      justify-content: center;
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+      padding-left: 14px;
+    }
+
+    .choice-btn {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid var(--panel-border);
+      color: #f8fafc;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      line-height: 1.35;
+    }
+
+    .choice-btn:hover {
+      background: var(--blue-accent);
+      border-color: #fff;
+      transform: translateX(4px);
+    }
+
+    /* INTERACTIVE STATIONS CONTAINER */
+    .station-overlay-screen {
+      background: #050814;
+      padding: 16px 24px;
+      overflow-y: auto;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    .interactive-container {
+      background: var(--panel-bg);
+      border: 1.5px solid var(--panel-border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      width: 100%;
+      max-width: 860px;
+      margin: auto 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85);
+    }
+
+    /* SPLIT-VIEW FOR STATION 2 */
+    .split-view-grid {
+      display: grid;
+      grid-template-columns: 310px 1fr;
+      gap: 14px;
+      margin-top: 6px;
+    }
+
+    .brief-panel-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1.5px solid rgba(59, 130, 246, 0.4);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .audit-panel-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1.5px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 220px;
+    }
+
+    .btn-fpu-pill {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 800;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(30, 41, 59, 0.8);
+      color: #cbd5e1;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-fpu-pill:hover {
+      background: var(--blue-accent);
+      color: #fff;
+    }
+
+    /* 3-CHIP BILLBOARD BUILDER (STATION 3) */
+    .slide-preview-box {
+      background: #020617;
+      border: 2px solid var(--gold-accent);
+      border-radius: 10px;
+      padding: 14px 18px;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .chip-bank-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .data-chip {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #cbd5e1;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .data-chip:hover {
+      border-color: var(--gold-accent);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .data-chip.selected {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: #10b981;
+      color: #34d399;
+    }
+
+    /* TELEPROMPTER SCREEN (Top clearance added to prevent HUD overlap) */
+    #screen-teleprompter {
+      background: #050814;
+      padding: 54px 26px 18px;
+      overflow-y: auto;
+    }
+
+    .cue-card-row {
+      background: var(--panel-bg);
+      border-left: 4px solid var(--gold-accent);
+      border-radius: 0 10px 10px 0;
+      padding: 8px 14px;
+      margin-bottom: 7px;
+      display: grid;
+      grid-template-columns: 160px 1fr 100px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .pause-slash {
+      display: inline-block;
+      color: var(--gold-bright);
+      font-weight: 900;
+      margin: 0 3px;
+      background: rgba(245, 158, 11, 0.18);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      padding: 0 4px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.92em;
+    }
+
+    .signpost-stress {
+      color: #60a5fa;
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- DUAL AUDIO CONTROLLERS -->
+  <audio id="audio-bgm" loop preload="auto"></audio>
+  <audio id="audio-voice" preload="auto"></audio>
+
+  <div id="vn-viewport">
+
+    <!-- SCREEN FADE OVERLAY -->
+    <div id="rpg-fade-overlay"></div>
+
+    <!-- FLOATING TOP HUD -->
+    <div class="top-floating-hud">
+      <div class="hud-left">
+        <span class="hud-badge" id="hud-location-tag">🏛️ EOP WORKSHOP &bull; WEEK 11</span>
+      </div>
+      <div class="hud-right">
+        <button class="btn-hud-pill" id="btn-toggle-bgm" onclick="app.toggleBgm()">🎵 BGM: ON</button>
+        <button class="btn-hud-pill" id="btn-return-hub" style="display: none;" onclick="app.returnToHub()">DIRECTORY HUB</button>
+      </div>
+    </div>
+
+    <!-- 0. SPLASH SCREEN -->
+    <div id="screen-splash" class="screen active" onclick="app.initializeExperience()">
+      <div class="splash-box">
+        <span class="title-tag">ENGLISH FOR OCCUPATIONAL PURPOSES &bull; MEETING 10</span>
+        <h1 style="font-size: 24px; font-weight: 900; margin: 10px 0; color: #fff;">
+          DESIGNING PROFESSIONAL PRESENTATIONS
+        </h1>
+        <p style="color: var(--text-muted); font-size: 12.5px; line-height: 1.5; margin-bottom: 20px;">
+          Visual Storyboard &bull; F/P/U Truth Check &bull; No-Slideument Rule &bull; Phone Teleprompter
+        </p>
+        <button class="btn-main-gold" onclick="app.initializeExperience()">TOUCH SCREEN OR PRESS ENTER TO COMMENCE</button>
+      </div>
+    </div>
+
+    <!-- 1. TITLE SCREEN -->
+    <div id="screen-title" class="screen">
+      <div class="title-content-card">
+        <div class="title-tag">SUB-CPMK 3.1 &bull; TELEPROMPTER TRIAL</div>
+        <h1 class="title-h1">CAMPUS PITCH SIMULATOR</h1>
+        <p class="title-sub">
+          Help Sinta &amp; Maya resolve the Room 402 poster crisis, build a 5-slide deck, and defend the trial to Mr. Hendra.
+        </p>
+        <div style="display: flex; gap: 12px;">
+          <button class="btn-main-gold" onclick="app.showRegister()">NEW SESSION</button>
+          <button class="btn-secondary" id="btn-continue-save" onclick="app.loadSavedGame()">CONTINUE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. REGISTRATION SCREEN -->
+    <div id="screen-register" class="screen">
+      <div class="reg-card">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.6); border-radius: 12px; padding: 14px;">
+          <img src="images/char_maya_teleprompter.webp" style="height: 190px; width: auto; object-fit: contain;" alt="Maya Avatar" />
+          <strong style="font-size: 13px; margin-top: 6px; color: var(--gold-accent);">MAYA (PRESENTER)</strong>
+          <span style="font-size: 11px; color: var(--text-muted);">Lead Event Committee Pitcher</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <h2 style="font-size: 16px; font-weight: 800; margin-bottom: 4px; color: var(--gold-bright);">PRESENTER CREDENTIALS</h2>
+            <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 12px;">Enter student details for Artifact #3.1 LMS submission verification.</p>
+
+            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">STUDENT NAME &amp; NIM</label>
+            <input type="text" id="reg-student-name" class="form-input" placeholder="e.g. 4522210001 - Alexander Cross" />
+
+            <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">COHORT / CLASS GROUP</label>
+            <input type="text" id="reg-student-class" class="form-input" placeholder="e.g. EOP Class A / Monday" />
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button class="btn-secondary" style="flex: 1;" onclick="app.quitToTitle()">CANCEL</button>
+            <button class="btn-main-gold" style="flex: 2;" onclick="app.confirmRegistration()">CONFIRM &amp; ENTER OFFICE</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. DIRECTORY HUB -->
+    <div id="screen-hub" class="screen">
+      <div class="hub-header">
+        <div>
+          <span style="font-size: 10px; font-weight: 800; color: var(--gold-accent); letter-spacing: 1px;">EOP WORKSHOP DIRECTORY</span>
+          <h2 style="font-size: 15px; font-weight: 800;" id="hub-candidate-display">PRESENTER: UNVERIFIED</h2>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-hud-pill" onclick="app.saveGameState()">💾 SAVE</button>
+          <button class="btn-hud-pill" onclick="app.quitToTitle()">EXIT</button>
+        </div>
+      </div>
+
+      <div class="hub-menu-grid">
+        <div class="hub-card" id="hub-card-st1" onclick="app.selectLocation('st1')">
+          <div>
+            <div style="font-size: 10px; font-weight: 800; color: var(--gold-bright); margin-bottom: 4px;">STATION 1</div>
+            <h3 style="font-size: 14.5px; font-weight: 800; margin-bottom: 4px;">The Poster Crisis</h3>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Investigate Room 402 vs. 204 error with Sinta &amp; Maya and spot the approved brief.
+            </p>
+          </div>
+          <div style="font-size: 11px; font-weight: 800; color: var(--blue-glow);" id="hub-status-st1">● AUTHORIZED</div>
+        </div>
+
+        <div class="hub-card locked" id="hub-card-st2" onclick="app.selectLocation('st2')">
+          <div>
+            <div style="font-size: 10px; font-weight: 800; color: var(--gold-bright); margin-bottom: 4px;">STATION 2</div>
+            <h3 style="font-size: 14.5px; font-weight: 800; margin-bottom: 4px;">F/P/U Truth Check</h3>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Learn Sinta's 3 rules and audit the AI draft against the brief to catch fake claims.
+            </p>
+          </div>
+          <div style="font-size: 11px; font-weight: 800; color: #94a3b8;" id="hub-status-st2">🔒 CLEAR STATION 1</div>
+        </div>
+
+        <div class="hub-card locked" id="hub-card-st3" onclick="app.selectLocation('st3')">
+          <div>
+            <div style="font-size: 10px; font-weight: 800; color: var(--gold-bright); margin-bottom: 4px;">STATION 3</div>
+            <h3 style="font-size: 14.5px; font-weight: 800; margin-bottom: 4px;">Garr Reynolds Studio</h3>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Master the No-Slideument rule through 3 worked examples and build a 14-word billboard.
+            </p>
+          </div>
+          <div style="font-size: 11px; font-weight: 800; color: #94a3b8;" id="hub-status-st3">🔒 CLEAR STATION 2</div>
+        </div>
+
+        <div class="hub-card locked" id="hub-card-st4" onclick="app.selectLocation('st4')">
+          <div>
+            <div style="font-size: 10px; font-weight: 800; color: var(--gold-bright); margin-bottom: 4px;">STATION 4</div>
+            <h3 style="font-size: 14.5px; font-weight: 800; margin-bottom: 4px;">Hendra Defense &amp; Teleprompter</h3>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Defend the trial to Mr. Hendra, rehearse with Maya's spoken audio, and export Artifact #3.1.
+            </p>
+          </div>
+          <div style="font-size: 11px; font-weight: 800; color: #94a3b8;" id="hub-status-st4">🔒 CLEAR STATION 3</div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--panel-bg); border: 1px solid var(--panel-border); padding: 8px 16px; border-radius: 10px;">
+        <span style="font-size: 11px; color: var(--text-muted);">CEFR A2–B1 Guided Presentation Learning Loop</span>
+        <span id="hub-progress-indicator" style="font-size: 11px; font-weight: 800; color: var(--gold-accent);">PROGRESS: 0 / 4 CLEARED</span>
+      </div>
+    </div>
+
+    <!-- 4. ACTIVE VISUAL NOVEL STAGE -->
+    <div id="screen-game" class="screen">
+      <div id="game-bg" class="bg-layer" style="background-image: url('images/bg_office_day.webp');"></div>
+
+      <!-- IN-STAGE PROP CARD OVERLAY (Poster 402 / 204) -->
+      <div id="prop-card-overlay">
+        <img id="prop-card-img" src="images/prop_poster_402.webp" alt="Poster Clue" />
+      </div>
+
+      <!-- IN-STAGE THEORY / EXAMPLE CARD OVERLAY (Station 3 Visuals) -->
+      <div id="theory-card-overlay">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--panel-border); padding-bottom: 4px; margin-bottom: 8px;">
+          <strong id="theory-card-title" style="color: var(--gold-bright); font-size: 12.5px; text-transform: uppercase;">EXAMPLE COMPARISON</strong>
+          <span id="theory-card-badge" style="font-size: 10px; font-weight: 800; color: var(--blue-glow); background: rgba(59,130,246,0.2); padding: 2px 8px; border-radius: 4px;">NO-SLIDEUMENT RULE</span>
+        </div>
+        <div id="theory-card-body" style="font-size: 12px; line-height: 1.5; color: #f1f5f9;"></div>
+      </div>
+
+      <!-- BOTTOM-ANCHORED SPRITE STAGE -->
+      <div class="sprite-stage">
+        <img id="sprite-left" class="character-sprite left active" src="images/char_sinta_worried.webp" alt="Left Character" />
+        <img id="sprite-right" class="character-sprite right active" src="images/char_maya_speaking.webp" alt="Right Character" />
+      </div>
+
+      <!-- TEXTBOX (Lower 28% Overlay) -->
+      <div id="vn-dialogue-card" class="single-pane">
+        <div class="dialogue-main" onclick="app.handleDialogueAdvance()">
+          <div>
+            <span class="speaker-name-plate" id="diag-speaker">SINTA</span>
+            <p class="dialogue-text" id="diag-body">"Maya, look at these two drafts! The official brief says Room 204, but Poster A says Room 402! 15 students might go to the wrong room."</p>
+          </div>
+          <div class="dialogue-prompt" id="diag-prompt">TOUCH SCREEN TO CONTINUE &gt;&gt;</div>
+        </div>
+
+        <div class="dialogue-choices" id="diag-choices-pane"></div>
+      </div>
+    </div>
+
+    <!-- 5. STATION 2: TUTORIAL BRIEFING SCREEN -->
+    <div id="screen-st2-tutorial" class="screen station-overlay-screen">
+      <div class="interactive-container">
+        <div style="border-bottom: 1px solid var(--panel-border); padding-bottom: 6px;">
+          <span class="title-tag">STATION 2 &bull; SINTA'S TRUTH CHECK TUTORIAL</span>
+          <h2 style="font-size: 16px; font-weight: 800; color: #fff;">The 3 Rules: Never Pitch Fake Data to Committee</h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 4px;">
+          <div style="background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; border-radius: 8px; padding: 10px;">
+            <strong style="color: #34d399; font-size: 12.5px;">[F] FACT (Fakta Terbukti)</strong>
+            <p style="font-size: 11px; color: #cbd5e1; margin-top: 4px; line-height: 1.4;">
+              • Real historical data.<br>
+              • Already happened in the past.<br>
+              • Proven by official documents.<br>
+              <em>e.g. "Brief confirmed Room 204."</em>
+            </p>
+          </div>
+
+          <div style="background: rgba(59, 130, 246, 0.15); border: 1.5px solid #3b82f6; border-radius: 8px; padding: 10px;">
+            <strong style="color: #60a5fa; font-size: 12.5px;">[P] PROPOSAL (Usulan / Solusi)</strong>
+            <p style="font-size: 11px; color: #cbd5e1; margin-top: 4px; line-height: 1.4;">
+              • An action idea for the FUTURE.<br>
+              • Not implemented yet.<br>
+              • Uses words: <em>should, propose, MAY</em>.<br>
+              <em>e.g. "Checklist MAY reduce errors."</em>
+            </p>
+          </div>
+
+          <div style="background: rgba(239, 68, 68, 0.15); border: 1.5px solid #ef4444; border-radius: 8px; padding: 10px;">
+            <strong style="color: #f87171; font-size: 12.5px;">[U] UNSUPPORTED (Klaim Bohong)</strong>
+            <p style="font-size: 11px; color: #cbd5e1; margin-top: 4px; line-height: 1.4;">
+              • Fake numbers or false victory.<br>
+              • Claiming 100% success BEFORE trial.<br>
+              • AI hallucinated metrics.<br>
+              <em>e.g. "Attendance jumped 30%!"</em>
+            </p>
+          </div>
+        </div>
+
+        <div style="background: rgba(30, 58, 138, 0.35); border: 1px solid var(--panel-border); border-radius: 8px; padding: 8px 12px; font-size: 11.5px;">
+          💡 <strong>Sinta:</strong> "We asked AI to draft our pitch slides, but it hallucinated fake statistics! Let's see a worked example first."
+        </div>
+
+        <div style="display: flex; justify-content: flex-end;">
+          <button class="btn-main-gold" onclick="app.launchSt2Example()">TRY WORKED EXAMPLE &gt;&gt;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5B. STATION 2: WORKED EXAMPLE & SPLIT-VIEW AUDIT EXERCISE -->
+    <div id="screen-st2-audit" class="screen station-overlay-screen">
+      <div class="interactive-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--panel-border); padding-bottom: 6px;">
+          <div>
+            <span class="title-tag">STATION 2 &bull; SPLIT-SCREEN AUDIT</span>
+            <h2 style="font-size: 16px; font-weight: 800;" id="st2-audit-title">Audit AI Draft Against Case Brief</h2>
+          </div>
+          <span id="st2-progress-badge" style="font-size: 11.5px; font-weight: 800; color: var(--gold-accent);">QUESTION 1 / 6</span>
+        </div>
+
+        <div class="split-view-grid">
+          <div class="brief-panel-card">
+            <strong style="color: var(--gold-bright); font-size: 12px; display: block; margin-bottom: 6px;">📄 VERIFIED CAMPUS CASE BRIEF</strong>
+            <ul style="padding-left: 14px; display: flex; flex-direction: column; gap: 4px; color: #cbd5e1;">
+              <li><strong>Event:</strong> Campus Tech Webinar</li>
+              <li><strong>Approved Venue:</strong> Room 204</li>
+              <li><strong>Discrepancy:</strong> Poster A listed Room 402</li>
+              <li><strong>Resolution:</strong> Sinta caught error before final printing</li>
+              <li><strong>Current Status:</strong> Proposed checklist submitted to Mr. Hendra</li>
+              <li><strong>Trial Record:</strong> <span style="color:#f87171; font-weight:700;">NO trial has occurred yet!</span></li>
+              <li><strong>Measured Metrics:</strong> <span style="color:#f87171; font-weight:700;">0 attendance data measured so far</span></li>
+            </ul>
+          </div>
+
+          <div class="audit-panel-card">
+            <div>
+              <span style="font-size: 10px; font-weight: 800; color: var(--blue-glow); text-transform: uppercase;">AI-Generated Draft Sentence:</span>
+              <p id="st2-audit-sentence" style="font-size: 13.5px; font-weight: 600; color: #fff; margin-top: 6px; line-height: 1.45;"></p>
+            </div>
+
+            <div style="margin: 10px 0;">
+              <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Classify this sentence against the brief:</span>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn-fpu-pill" onclick="app.submitAuditAnswer('F')">F - Fact (Supported)</button>
+                <button class="btn-fpu-pill" onclick="app.submitAuditAnswer('P')">P - Proposal (Action)</button>
+                <button class="btn-fpu-pill" onclick="app.submitAuditAnswer('U')">U - Unsupported (Fake)</button>
+              </div>
+            </div>
+
+            <div id="st2-audit-feedback" style="font-size: 11.5px; font-weight: 600; padding: 6px 10px; border-radius: 6px; display: none;"></div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+              <button id="btn-st2-next" class="btn-main-gold" style="padding: 6px 16px; font-size: 11.5px; display: none;" onclick="app.advanceAuditQuestion()">NEXT SENTENCE &gt;&gt;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. STATION 3: 3-CHIP BILLBOARD BUILDER -->
+    <div id="screen-st3-builder" class="screen station-overlay-screen">
+      <div class="interactive-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--panel-border); padding-bottom: 6px;">
+          <div>
+            <span class="title-tag">STATION 3 &bull; GARR REYNOLDS STUDIO</span>
+            <h2 style="font-size: 16px; font-weight: 800;">No-Slideument Rule: 3-Chip Billboard Builder</h2>
+          </div>
+          <span id="st3-word-badge" style="font-size: 12px; font-weight: 800; color: var(--crimson-red);">CURRENT: 0 / 15 WORDS</span>
+        </div>
+
+        <div style="background: rgba(30, 58, 138, 0.35); border: 1px solid var(--panel-border); border-radius: 8px; padding: 8px 12px; font-size: 11.5px;">
+          💡 <strong>Maya:</strong> "Garr Reynolds' rule: The slide face is a billboard (≤ 15 words). Tap the 3 essential data chips below. Leave emotional filler and irrelevant details out!"
+        </div>
+
+        <div class="slide-preview-box">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 4px;">
+            <strong style="color: var(--gold-accent); font-size: 12px;">SLIDE 2: VENUE DISCREPANCY CASE</strong>
+            <span style="font-size: 10px; color: var(--text-muted);">TARGET: &le; 15 WORDS</span>
+          </div>
+
+          <div id="slide2-bullet-list" style="display: flex; flex-direction: column; gap: 4px; margin: 8px 0; font-size: 12px;">
+            <div style="color: #64748b;">• [Slot 1: Tap a Topic Chip below]</div>
+            <div style="color: #64748b;">• [Slot 2: Tap an Impact Chip below]</div>
+            <div style="color: #64748b;">• [Slot 3: Tap an Action Chip below]</div>
+          </div>
+
+          <div style="font-size: 10.5px; color: var(--text-muted);">
+            📱 <em>Long explanations are moved to your phone teleprompter notes to speak out loud!</em>
+          </div>
+        </div>
+
+        <div>
+          <span style="font-size: 11px; font-weight: 700; color: var(--blue-glow);">AVAILABLE DATA CHIPS (Select 3):</span>
+          <div class="chip-bank-row" id="st3-chip-bank"></div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+          <span id="st3-builder-feedback" style="font-size: 11.5px; font-weight: 700; color: var(--blue-glow);">Select 3 chips to complete Slide 2.</span>
+          <button id="btn-st3-confirm" class="btn-main-gold" style="padding: 6px 18px; font-size: 11.5px; opacity: 0.5; pointer-events: none;" onclick="app.confirmSlide2Build()">CONFIRM SLIDE FACE &gt;&gt;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. STATION 4: TELEPROMPTER SCREEN (FIXED PADDING) -->
+    <div id="screen-teleprompter" class="screen">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div>
+          <span class="title-tag">STATION 4 &bull; ORAL PACING &amp; DEFENSE</span>
+          <h2 style="font-size: 17px; font-weight: 800;">Hot-Seat Phone Teleprompter Script</h2>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-main-gold" style="padding: 5px 14px; font-size: 11.5px;" onclick="app.exportArtifactDoc()">📄 EXPORT ARTIFACT (.DOC)</button>
+          <button class="btn-hud-pill" onclick="app.returnToHub()">DIRECTORY HUB</button>
+        </div>
+      </div>
+
+      <div style="background: rgba(30, 58, 138, 0.35); border: 1.5px solid var(--panel-border); border-radius: 8px; padding: 6px 12px; margin-bottom: 8px; font-size: 11px; display: flex; justify-content: space-between; align-items: center;">
+        <span><strong>TELEPROMPTER RULE:</strong> Zero penalty for reading phone screen! Pause 1 second at each slash mark (<span class="pause-slash">/</span>).</span>
+        <span style="color: var(--gold-accent); font-weight: 800;">5 SLIDES READY</span>
+      </div>
+
+      <div id="teleprompter-card-list">
+        <div class="cue-card-row">
+          <div><strong style="color: var(--gold-accent); font-size: 12px;">SLIDE 1: PURPOSE</strong><br><small style="color: var(--text-muted);">&le; 15 words face</small></div>
+          <div style="font-size: 12.5px;"><span class="signpost-stress">Good morning.</span> <span class="pause-slash">/</span> Today I propose a 1-page digital checklist <span class="pause-slash">/</span> to eliminate campus poster errors.</div>
+          <button class="btn-hud-pill" onclick="app.playModelPitch(1)">🔊 LISTEN</button>
+        </div>
+
+        <div class="cue-card-row">
+          <div><strong style="color: var(--gold-accent); font-size: 12px;">SLIDE 2: PROBLEM</strong><br><small style="color: var(--text-muted);">&le; 15 words face</small></div>
+          <div style="font-size: 12.5px;"><span class="signpost-stress">As you can see from this slide,</span> <span class="pause-slash">/</span> last week 15 students waited at Room 402 <span class="pause-slash">/</span> because two posters listed different rooms.</div>
+          <button class="btn-hud-pill" onclick="app.playModelPitch(2)">🔊 LISTEN</button>
+        </div>
+
+        <div class="cue-card-row">
+          <div><strong style="color: var(--gold-accent); font-size: 12px;">SLIDE 3: SOLUTION</strong><br><small style="color: var(--text-muted);">&le; 15 words face</small></div>
+          <div style="font-size: 12.5px;"><span class="signpost-stress">Moving on to our propose solution,</span> <span class="pause-slash">/</span> we designed a simple verification checklist <span class="pause-slash">/</span> requiring 2nd-person sign-off.</div>
+          <button class="btn-hud-pill" onclick="app.playModelPitch(3)">🔊 LISTEN</button>
+        </div>
+
+        <div class="cue-card-row">
+          <div><strong style="color: var(--gold-accent); font-size: 12px;">SLIDE 4: TRIAL PLAN</strong><br><small style="color: var(--text-muted);">&le; 15 words face</small></div>
+          <div style="font-size: 12.5px;"><span class="signpost-stress">Next, let us look at the trial plan.</span> <span class="pause-slash">/</span> This checklist <strong style="color:#34d399;">MAY</strong> prevent errors. <span class="pause-slash">/</span> We plan to test it for next week's webinar.</div>
+          <button class="btn-hud-pill" onclick="app.playModelPitch(4)">🔊 LISTEN</button>
+        </div>
+
+        <div class="cue-card-row">
+          <div><strong style="color: var(--gold-accent); font-size: 12px;">SLIDE 5: ACTION</strong><br><small style="color: var(--text-muted);">&le; 15 words face</small></div>
+          <div style="font-size: 12.5px;"><span class="signpost-stress">To sum up,</span> <span class="pause-slash">/</span> we ask the committee to approve this 1-event trial <span class="pause-slash">/</span> before printing Friday's posters.</div>
+          <button class="btn-hud-pill" onclick="app.playModelPitch(5)">🔊 LISTEN</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ========================================================================
+       EOP WEEK 11 ENGINE: DESIGNING PROFESSIONAL PRESENTATIONS
+       ======================================================================== */
+    const app = {
+      isBgmEnabled: true,
+      currentBgmTrack: '',
+      studentProfile: { name: '', classId: '' },
+      unlockedStates: { st1Cleared: false, st2Cleared: false, st3Cleared: false, st4Cleared: false },
+      
+      scriptIndex: 0,
+      currentStation: 'st1',
+
+      /* EXACT AUDIO CUE TEXTS (MATCHING RESTORED .WAV RECORDINGS) */
+      slidePitchScripts: {
+        1: "Good morning. Today I propose a 1-page digital checklist to eliminate campus poster errors.",
+        2: "As you can see from this slide, last week 15 students waited at Room 402 because two posters listed different rooms.",
+        3: "Moving on to our propose solution, we designed a simple verification checklist requiring 2nd-person sign-off.",
+        4: "Next, let us look at the trial plan. This checklist MAY prevent errors. We plan to test it for next week's webinar.",
+        5: "To sum up, we ask the committee to approve this 1-event trial before printing Friday's posters."
+      },
+
+      /* STATION 1 NARRATIVE: Sinta (Left) and Maya (Right) */
+      narrativeSt1: [
+        {
+          speaker: "Sinta",
+          spriteLeft: "images/char_sinta_worried.webp",
+          spriteRight: "images/char_maya_speaking.webp",
+          activeSide: "left",
+          text: "Maya, look at these two drafts! The official brief says Room 204, but Poster A says Room 402! 15 students might go to the wrong room.",
+          audio: "audio/vo_sinta_01_crisis.mp3",
+          showProp: "images/prop_poster_402.webp"
+        },
+        {
+          speaker: "Maya",
+          spriteLeft: "images/char_sinta_worried.webp",
+          spriteRight: "images/char_maya_speaking.webp",
+          activeSide: "right",
+          text: "Calm down, Sinta. Let me see both posters. If Room 204 is the approved brief, we can still fix this before printing.",
+          audio: "audio/vo_maya_01_crisis_response.mp3",
+          showProp: "images/prop_poster_204.webp"
+        },
+        {
+          speaker: "Sinta",
+          spriteLeft: "images/char_sinta_smile.webp",
+          spriteRight: "images/char_maya_speaking.webp",
+          activeSide: "left",
+          text: "Wait! Before we talk to Mr. Hendra, we must separate facts from proposals. Never claim fake results before a trial.",
+          audio: "audio/vo_sinta_02_truthcheck.mp3",
+          showProp: null,
+          isStationEnd: true
+        }
+      ],
+
+      /* STATION 2 AUDIT ITEMS (Split-Screen format) */
+      isExampleMode: false,
+      auditIndex: 0,
+      auditScore: 0,
+      auditQuestions: [
+        {
+          sentence: "Poster A listed Room 402, while the approved brief stated Room 204.",
+          correct: "F",
+          explanation: "Supported by Brief items 2 & 3. Both room numbers are confirmed historical facts."
+        },
+        {
+          sentence: "By using this digital checklist, student attendance increased by 30%.",
+          correct: "U",
+          explanation: "AI Hallucination! Brief explicitly states: 'NO trial has occurred' and '0 attendance data measured'."
+        },
+        {
+          sentence: "The committee should mandate a second-person check before printing any campus flyer.",
+          correct: "P",
+          explanation: "Valid proposal! The word 'should' proposes a future workflow for committee approval."
+        },
+        {
+          sentence: "Sinta caught the discrepancy and corrected the room number before final publication.",
+          correct: "F",
+          explanation: "Supported by Brief item 4. The error was caught and resolved in time."
+        },
+        {
+          sentence: "This verification workflow MAY help reduce inconsistent event information in the future.",
+          correct: "P",
+          explanation: "Qualified future benefit! Notice the modal 'MAY' instead of promising 100% perfection."
+        },
+        {
+          sentence: "The event committee has already completed a pilot test of the verification checklist.",
+          correct: "U",
+          explanation: "AI Hallucination! Look at 'Trial Record': NO trial has occurred yet; it is still pending approval."
+        }
+      ],
+
+      /* STATION 3 THEORY & 3 WORKED EXAMPLES NARRATIVE */
+      narrativeSt3Theory: [
+        {
+          speaker: "Sinta",
+          spriteLeft: "images/char_sinta_worried.webp",
+          spriteRight: "images/char_maya_speaking.webp",
+          activeSide: "left",
+          text: "Maya, look at our slides! They are full of long, heavy paragraphs. If we delete words, won't Mr. Hendra miss our point?",
+          audio: "audio/vo_sinta_03a_worry_text.mp3",
+          showTheory: null
+        },
+        {
+          speaker: "Maya",
+          spriteLeft: "images/char_sinta_worried.webp",
+          spriteRight: "images/char_maya_speaking.webp",
+          activeSide: "right",
+          text: "Not at all, Sinta! Long paragraphs are the #1 reason audiences stop listening. Have you heard of Garr Reynolds? He wrote 'Presentation Zen'!",
+          audio: "audio/vo_maya_02a_intro_reynolds.mp3",
+          showTheory: null
+        },
+        {
+          speaker: "Maya",
+          spriteLeft: "images/char_sinta_worried.webp",
+          spriteRight: "images/char_maya_speaking.webp",
+          activeSide: "right",
+          text: "Garr Reynolds created the 'No-Slideument' Rule: A slide is a billboard (≤ 15 words) for eyes. Your voice and phone teleprompter do the storytelling!",
+          audio: "audio/vo_maya_03b_billboard_rule.mp3",
+          showTheory: {
+            title: "GARR REYNOLDS' GOLDEN RULE",
+            badge: "NO-SLIDEUMENT RULE",
+            content: "<strong>❌ The Slideument Trap:</strong> Putting 40+ words of text on screen. Audience reads like a book and ignores your voice.<br><br><strong>✅ The Billboard Rule:</strong> Slide face has &le; 15 words. Full sentences go into your <strong>Phone Teleprompter</strong> to speak out loud!"
+          }
+        },
+        {
+          speaker: "Maya",
+          spriteLeft: "images/char_sinta_smile.webp",
+          spriteRight: "images/char_maya_speaking.webp",
+          activeSide: "right",
+          text: "Look at Example 1: The Purpose Slide. We cut 35 words down to 8 words! The core topic and goal remain 100% intact.",
+          audio: "audio/vo_maya_03c_example1_purpose.mp3",
+          showTheory: {
+            title: "EXAMPLE 1: SLIDE 1 (PURPOSE)",
+            badge: "35 WORDS ➔ 8 WORDS",
+            content: "<div style='display:grid; grid-template-columns:1fr 1fr; gap:10px;'>" +
+                     "<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:8px; border-radius:6px;'>" +
+                     "<strong style='color:#f87171;'>❌ Bad Slide (35 words):</strong><br><small>'Good morning committee members. Today our event team wants to formally introduce a proposal to create a single-page verification checklist so that no more printing mistakes happen...'</small></div>" +
+                     "<div style='background:rgba(16,185,129,0.15); border:1px solid #10b981; padding:8px; border-radius:6px;'>" +
+                     "<strong style='color:#34d399;'>✅ Billboard (8 words):</strong><br><strong>PURPOSE:</strong><br>• 1-Page Pre-Print Checklist<br>• Eliminates Poster Errors</div>" +
+                     "</div><div style='margin-top:6px; font-size:11px; color:#94a3b8;'>📱 <em>Spoken via Teleprompter:</em> 'Good morning. Today I propose a 1-page digital checklist...'</div>"
+          }
+        },
+        {
+          speaker: "Maya",
+          spriteLeft: "images/char_sinta_smile.webp",
+          spriteRight: "images/char_maya_speaking.webp",
+          activeSide: "right",
+          text: "Example 2: The Venue Problem. Eyes look for key nouns and numbers: Room 402, Room 204, and 15 students. The rest is narrative you speak!",
+          audio: "audio/vo_maya_03d_example2_venue.mp3",
+          showTheory: {
+            title: "EXAMPLE 2: SLIDE 2 (VENUE PROBLEM)",
+            badge: "42 WORDS ➔ 12 WORDS",
+            content: "<div style='display:grid; grid-template-columns:1fr 1fr; gap:10px;'>" +
+                     "<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:8px; border-radius:6px;'>" +
+                     "<strong style='color:#f87171;'>❌ Bad Slide (42 words):</strong><br><small>'Last week our team experienced a very serious printing discrepancy where Poster A displayed Room 402, while 15 confused students waited outside because brief confirmed Room 204...'</small></div>" +
+                     "<div style='background:rgba(16,185,129,0.15); border:1px solid #10b981; padding:8px; border-radius:6px;'>" +
+                     "<strong style='color:#34d399;'>✅ Billboard (12 words):</strong><br><strong>THE DISCREPANCY:</strong><br>• Poster A vs. Brief: Room 402 vs 204<br>• Impact: 15 Students Delayed</div>" +
+                     "</div><div style='margin-top:6px; font-size:11px; color:#94a3b8;'>📱 <em>Spoken via Teleprompter:</em> 'As you can see from this slide, last week 15 students waited at Room 402...'</div>"
+          }
+        },
+        {
+          speaker: "Maya",
+          spriteLeft: "images/char_sinta_smile.webp",
+          spriteRight: "images/char_maya_speaking.webp",
+          activeSide: "right",
+          text: "Example 3: The Solution Slide. Cutting out 29 filler words lets the audience grasp our two key solutions in 2 seconds flat!",
+          audio: "audio/vo_maya_03e_example3_solution.mp3",
+          showTheory: {
+            title: "EXAMPLE 3: SLIDE 3 (SOLUTION)",
+            badge: "38 WORDS ➔ 9 WORDS",
+            content: "<div style='display:grid; grid-template-columns:1fr 1fr; gap:10px;'>" +
+                     "<div style='background:rgba(239,68,68,0.15); border:1px solid #ef4444; padding:8px; border-radius:6px;'>" +
+                     "<strong style='color:#f87171;'>❌ Bad Slide (38 words):</strong><br><small>'To solve this issue, our proposal is that we should design a digital Google Form checklist where two different committee members must inspect and sign off on details...'</small></div>" +
+                     "<div style='background:rgba(16,185,129,0.15); border:1px solid #10b981; padding:8px; border-radius:6px;'>" +
+                     "<strong style='color:#34d399;'>✅ Billboard (9 words):</strong><br><strong>PROPOSED SOLUTION:</strong><br>• 1-Page Digital Checklist<br>• Mandatory 2nd-Person Verification</div>" +
+                     "</div><div style='margin-top:6px; font-size:11px; color:#94a3b8;'>📱 <em>Spoken via Teleprompter:</em> 'Moving on to our solution, we designed a simple verification checklist...'</div>"
+          }
+        },
+        {
+          speaker: "Sinta",
+          spriteLeft: "images/char_sinta_smile.webp",
+          spriteRight: "images/char_maya_speaking.webp",
+          activeSide: "left",
+          text: "I see! The slide face holds the key numbers, while the teleprompter holds the full sentences. Let's build Slide 2!",
+          audio: "audio/vo_sinta_02b_reynolds_recap.mp3",
+          showTheory: null,
+          isTheoryEnd: true
+        }
+      ],
+
+      /* STATION 3: 3-CHIP BILLBOARD BUILDER DATA */
+      selectedChips: [],
+      chipsData: [
+        { id: 'A', text: "Room 402 vs. 204 Discrepancy", words: 6, isCore: true, type: "Topic" },
+        { id: 'B', text: "15 Students Delayed at Venue", words: 5, isCore: true, type: "Impact" },
+        { id: 'C', text: "Our committee felt super stressed & tired", words: 7, isCore: false, reason: "Emotional filler! Keep feelings off slide faces." },
+        { id: 'D', text: "Mandatory Pre-Print Checklist", words: 3, isCore: true, type: "Action" },
+        { id: 'E', text: "Printers are in Building B basement", words: 6, isCore: false, reason: "Irrelevant detail! Location of printers doesn't matter." }
+      ],
+
+      /* STATION 4 DEFENSE: PREP BANTER (Bridges Slide to Teleprompter) + MR. HENDRA BOSS Q&A */
+      defenseIndex: 0,
+      defenseScript: [
+        {
+          speaker: "Sinta",
+          spriteLeft: "images/char_sinta_worried.webp",
+          spriteRight: "images/char_maya_speaking.webp",
+          activeSide: "left",
+          text: "Maya, our Slide 2 looks great as a billboard, but it only says 'Room 402 vs 204' and '15 Students Delayed'. What if Mr. Hendra asks for the whole story? I can't memorize 5 slides of English!",
+          audio: "audio/vo_sinta_04_crisis.mp3",
+          isPrepBanter: true
+        },
+        {
+          speaker: "Maya",
+          spriteLeft: "images/char_sinta_worried.webp",
+          spriteRight: "images/char_maya_teleprompter.webp",
+          activeSide: "right",
+          text: "Who said anything about memorizing, Sinta? That is the secret of Garr Reynolds! The projector is for the audience's eyes; your smartphone is for your voice.",
+          audio: "audio/vo_maya_04_slide_strategy.mp3",
+          isPrepBanter: true
+        },
+        {
+          speaker: "Maya",
+          spriteLeft: "images/char_sinta_smile.webp",
+          spriteRight: "images/char_maya_teleprompter.webp",
+          activeSide: "right",
+          text: "Executives don't memorize essays. They glance at their phone teleprompter, deliver the point clearly, and pause at the slash marks (/). There is zero penalty for reading!",
+          audio: "audio/vo_maya_04_opening_pitch.mp3",
+          isPrepBanter: true
+        },
+        {
+          speaker: "Sinta",
+          spriteLeft: "images/char_sinta_smile.webp",
+          spriteRight: "images/char_maya_teleprompter.webp",
+          activeSide: "left",
+          text: "Wait... so when Mr. Hendra challenges us on the trial, I don't have to panic? I just keep my eyes on the teleprompter cues and answer with verified facts?",
+          audio: "audio/vo_sinta_04_truthcheck.mp3",
+          isPrepBanter: true
+        },
+        {
+          speaker: "Maya",
+          spriteLeft: "images/char_sinta_smile.webp",
+          spriteRight: "images/char_maya_speaking.webp",
+          activeSide: "right",
+          text: "Exactly! The slide shows the proof, the teleprompter protects our pacing, and we use qualified words like 'MAY'. Shh! Here comes Mr. Hendra!",
+          audio: "audio/vo_maya_04_may_answer.mp3",
+          isPrepBanterEnd: true
+        },
+        /* MR. HENDRA BOSS Q&A */
+        {
+          speaker: "Mr. Hendra",
+          spriteLeft: "images/char_maya_speaking.webp",
+          spriteRight: "images/char_hendra_serious.webp",
+          activeSide: "right",
+          text: "Maya, Sinta. Why should the committee add another step to our workflow? What problem does this actually solve?",
+          audio: "audio/vo_hendra_01_challenge.mp3",
+          choices: [
+            {
+              label: "Audience Need Focus",
+              speechText: "Good morning, Mr. Hendra. Imagine fifteen students waiting outside a locked room because of a single number error. Today, we propose a simple 1-page checklist to prevent campus poster discrepancies.",
+              speechAudio: "audio/vo_maya_03_opening_pitch.mp3",
+              isCorrect: true,
+              nextIndex: 6
+            },
+            {
+              label: "Unaligned Reason",
+              speechText: "Because our current posters are ugly and we want new design software.",
+              speechAudio: "",
+              isCorrect: false,
+              feedback: "Mr. Hendra shakes his head: 'That is not the committee's constraint. We care about clear information, not graphic redesigns!'"
+            }
+          ]
+        },
+        {
+          speaker: "Mr. Hendra",
+          spriteLeft: "images/char_maya_speaking.webp",
+          spriteRight: "images/char_hendra_serious.webp",
+          activeSide: "right",
+          text: "Does this checklist guarantee zero errors, or is this still an untested proposal?",
+          audio: "audio/vo_hendra_02_probing.mp3",
+          choices: [
+            {
+              label: "Qualified Modal 'MAY'",
+              speechText: "We do not claim a hundred percent zero errors. However, a second-person verification MAY significantly reduce printing mistakes. We ask for a one-event trial for next week's webinar.",
+              speechAudio: "audio/vo_maya_04_defense_answer.mp3",
+              isCorrect: true,
+              nextIndex: 7
+            },
+            {
+              label: "Unsupported Claim",
+              speechText: "Yes! Our checklist will permanently guarantee 100% perfect events with 80% higher attendance!",
+              speechAudio: "",
+              isCorrect: false,
+              feedback: "Mr. Hendra glares: 'Unsupported claim! No trial has taken place. Never promise unverified numbers!'"
+            }
+          ]
+        },
+        {
+          speaker: "Mr. Hendra",
+          spriteLeft: "images/char_maya_speaking.webp",
+          spriteRight: "images/char_hendra_approve.webp",
+          activeSide: "right",
+          text: "That is a practical recommendation. I approve a one-event pilot test for next week's campus webinar.",
+          audio: "audio/vo_hendra_03_approval.mp3",
+          choices: [
+            {
+              label: "Confirm Trial & Enter Teleprompter Rehearsal",
+              speechText: "Thank you, Mr. Hendra. We will run the trial and report our findings.",
+              speechAudio: "audio/vo_maya_05_confirm_trial.mp3",
+              isCorrect: true,
+              isDefenseClear: true
+            }
+          ]
+        }
+      ],
+
+      init() {
+        this.loadSavedProgression();
+      },
+
+      /* BGM & SMART AUDIO ENGINE (MP3 with WAV fallback + Audio Ducking) */
+      playBgm(trackPath, volume = 0.25) {
+        if (!this.isBgmEnabled) return;
+        const bgm = document.getElementById("audio-bgm");
+        if (this.currentBgmTrack === trackPath && !bgm.paused) return;
+
+        this.currentBgmTrack = trackPath;
+        bgm.src = trackPath;
+        bgm.volume = volume;
+        bgm.play().catch(e => console.warn("BGM autoplay delayed:", e));
+      },
+
+      stopBgm() {
+        const bgm = document.getElementById("audio-bgm");
+        if (bgm) bgm.pause();
+      },
+
+      toggleBgm() {
+        this.isBgmEnabled = !this.isBgmEnabled;
+        const btn = document.getElementById("btn-toggle-bgm");
+        const bgm = document.getElementById("audio-bgm");
+
+        if (this.isBgmEnabled) {
+          btn.innerText = "🎵 BGM: ON";
+          btn.style.color = "#fff";
+          if (this.currentBgmTrack) {
+            bgm.volume = 0.25;
+            bgm.play().catch(e => {});
+          }
+        } else {
+          btn.innerText = "🔇 BGM: OFF";
+          btn.style.color = "#94a3b8";
+          bgm.pause();
+        }
+      },
+
+      playVoice(primaryPath, onEndedCallback) {
+        const voice = document.getElementById("audio-voice");
+        const bgm = document.getElementById("audio-bgm");
+        if (!voice) return;
+
+        voice.pause();
+        voice.currentTime = 0;
+
+        // Auto-duck BGM to 8% while voice plays
+        if (this.isBgmEnabled && bgm && !bgm.paused) {
+          bgm.volume = 0.08;
+        }
+
+        const restoreBgm = () => {
+          if (this.isBgmEnabled && bgm && !bgm.paused) {
+            bgm.volume = 0.25;
+          }
+          if (onEndedCallback) onEndedCallback();
+        };
+
+        // Try primary path, fallback to .wav if .mp3 failed or vice versa
+        voice.src = primaryPath;
+        voice.onerror = () => {
+          let fallbackPath = '';
+          if (primaryPath.endsWith('.mp3')) {
+            fallbackPath = primaryPath.replace('.mp3', '.wav');
+          } else if (primaryPath.endsWith('.wav')) {
+            fallbackPath = primaryPath.replace('.wav', '.mp3');
+          }
+          if (fallbackPath) {
+            voice.src = fallbackPath;
+            voice.onerror = () => restoreBgm();
+            voice.play().then(() => {
+              voice.onended = restoreBgm;
+            }).catch(() => restoreBgm());
+          } else {
+            restoreBgm();
+          }
+        };
+
+        voice.play().then(() => {
+          voice.onended = restoreBgm;
+        }).catch(() => restoreBgm());
+      },
+
+      stopVoice() {
+        const voice = document.getElementById("audio-voice");
+        if (voice) {
+          voice.pause();
+          voice.currentTime = 0;
+        }
+      },
+
+      /* SCREEN TRANSITIONS */
+      fadeTransition(callback) {
+        const overlay = document.getElementById("rpg-fade-overlay");
+        overlay.classList.add("blackout");
+        setTimeout(() => {
+          callback();
+          setTimeout(() => {
+            overlay.classList.remove("blackout");
+          }, 300);
+        }, 350);
+      },
+
+      switchScreen(screenId) {
+        this.stopVoice();
+        document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+        const target = document.getElementById(screenId);
+        if (target) target.classList.add("active");
+
+        const hubBtn = document.getElementById("btn-return-hub");
+        if (screenId === 'screen-title' || screenId === 'screen-splash' || screenId === 'screen-register') {
+          hubBtn.style.display = "none";
+        } else {
+          hubBtn.style.display = "block";
+        }
+      },
+
+      initializeExperience() {
+        this.fadeTransition(() => {
+          this.playBgm('audio/bgm_title_ver2.mp3', 0.25);
+          this.switchScreen('screen-title');
+        });
+      },
+
+      showRegister() {
+        this.switchScreen('screen-register');
+      },
+
+      confirmRegistration() {
+        const nameInput = document.getElementById("reg-student-name").value.trim();
+        const classInput = document.getElementById("reg-student-class").value.trim();
+
+        this.studentProfile = {
+          name: nameInput || "Maya (Presenter)",
+          classId: classInput || "EOP Week 11 Cohort"
+        };
+
+        this.unlockedStates = { st1Cleared: false, st2Cleared: false, st3Cleared: false, st4Cleared: false };
+        this.saveGameState();
+
+        this.fadeTransition(() => {
+          this.openHub();
+        });
+      },
+
+      openHub() {
+        this.stopVoice();
+        this.playBgm('audio/bgm_office_ver2.mp3', 0.22);
+        this.updateHubUI();
+        this.switchScreen('screen-hub');
+      },
+
+      updateHubUI() {
+        document.getElementById("hub-candidate-display").innerText = 
+          `PRESENTER: ${this.studentProfile.name.toUpperCase()} (${this.studentProfile.classId})`;
+
+        const st2 = document.getElementById("hub-card-st2");
+        const status2 = document.getElementById("hub-status-st2");
+        if (this.unlockedStates.st1Cleared) {
+          st2.classList.remove("locked");
+          status2.innerText = "● AUTHORIZED";
+          status2.style.color = "#60a5fa";
+        }
+
+        const st3 = document.getElementById("hub-card-st3");
+        const status3 = document.getElementById("hub-status-st3");
+        if (this.unlockedStates.st2Cleared) {
+          st3.classList.remove("locked");
+          status3.innerText = "● AUTHORIZED";
+          status3.style.color = "#60a5fa";
+        }
+
+        const st4 = document.getElementById("hub-card-st4");
+        const status4 = document.getElementById("hub-status-st4");
+        if (this.unlockedStates.st3Cleared) {
+          st4.classList.remove("locked");
+          status4.innerText = "● AUTHORIZED";
+          status4.style.color = "#10b981";
+        }
+
+        let cleared = 0;
+        if (this.unlockedStates.st1Cleared) cleared++;
+        if (this.unlockedStates.st2Cleared) cleared++;
+        if (this.unlockedStates.st3Cleared) cleared++;
+        if (this.unlockedStates.st4Cleared) cleared++;
+        document.getElementById("hub-progress-indicator").innerText = `PROGRESS: ${cleared} / 4 CLEARED`;
+      },
+
+      selectLocation(loc) {
+        if (loc === 'st1') {
+          this.fadeTransition(() => this.launchStation1());
+        } else if (loc === 'st2') {
+          if (!this.unlockedStates.st1Cleared) return;
+          this.fadeTransition(() => this.launchStation2Tutorial());
+        } else if (loc === 'st3') {
+          if (!this.unlockedStates.st2Cleared) return;
+          this.fadeTransition(() => this.launchStation3Theory());
+        } else if (loc === 'st4') {
+          if (!this.unlockedStates.st3Cleared) return;
+          this.fadeTransition(() => this.launchStation4Defense());
+        }
+      },
+
+      returnToHub() {
+        this.openHub();
+      },
+
+      quitToTitle() {
+        this.playBgm('audio/bgm_title_ver2.mp3', 0.25);
+        this.switchScreen('screen-title');
+      },
+
+      /* ======================================================================
+         STATION 1: POSTER CRISIS VISUAL NOVEL
+         ====================================================================== */
+      launchStation1() {
+        this.currentStation = 'st1';
+        this.scriptIndex = 0;
+        document.getElementById("game-bg").style.backgroundImage = "url('images/bg_office_day.webp')";
+        document.getElementById("hud-location-tag").innerText = "STATION 1: THE POSTER CRISIS";
+        document.getElementById("theory-card-overlay").style.display = "none";
+        this.switchScreen('screen-game');
+        this.renderNarrativeBeat();
+      },
+
+      renderNarrativeBeat() {
+        if (this.scriptIndex >= this.narrativeSt1.length) {
+          this.unlockedStates.st1Cleared = true;
+          this.saveGameState();
+          alert("Station 1 Complete! Room discrepancy identified. Return to Hub to access Station 2.");
+          this.openHub();
+          return;
+        }
+
+        const beat = this.narrativeSt1[this.scriptIndex];
+        document.getElementById("diag-speaker").innerText = beat.speaker.toUpperCase();
+        document.getElementById("diag-body").innerText = `"${beat.text}"`;
+
+        const sLeft = document.getElementById("sprite-left");
+        const sRight = document.getElementById("sprite-right");
+        sLeft.src = beat.spriteLeft;
+        sRight.src = beat.spriteRight;
+
+        sLeft.classList.remove("hidden");
+        sRight.classList.remove("hidden");
+
+        if (beat.activeSide === 'left') {
+          sLeft.classList.add("active");
+          sLeft.classList.remove("inactive");
+          sRight.classList.add("inactive");
+          sRight.classList.remove("active");
+        } else {
+          sRight.classList.add("active");
+          sRight.classList.remove("inactive");
+          sLeft.classList.add("inactive");
+          sLeft.classList.remove("active");
+        }
+
+        const propOverlay = document.getElementById("prop-card-overlay");
+        const propImg = document.getElementById("prop-card-img");
+        if (beat.showProp) {
+          propOverlay.style.display = "block";
+          propImg.src = beat.showProp;
+        } else {
+          propOverlay.style.display = "none";
+        }
+
+        if (beat.audio) this.playVoice(beat.audio);
+
+        const card = document.getElementById("vn-dialogue-card");
+        const choices = document.getElementById("diag-choices-pane");
+        choices.innerHTML = "";
+
+        if (beat.isStationEnd) {
+          card.classList.remove("single-pane");
+          const btn = document.createElement("button");
+          btn.className = "choice-btn";
+          btn.innerText = "RETURN TO DIRECTORY HUB >>";
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            this.unlockedStates.st1Cleared = true;
+            this.saveGameState();
+            alert("Station 1 Complete! Room discrepancy identified. Return to Hub to access Station 2.");
+            this.openHub();
+          };
+          choices.appendChild(btn);
+        } else {
+          card.classList.add("single-pane");
+        }
+      },
+
+      handleDialogueAdvance() {
+        if (this.currentStation === 'st1') {
+          this.scriptIndex++;
+          this.renderNarrativeBeat();
+        } else if (this.currentStation === 'st3_theory') {
+          this.scriptIndex++;
+          this.renderSt3TheoryBeat();
+        } else if (this.currentStation === 'st4_defense') {
+          if (this.defenseScript[this.defenseIndex].isPrepBanter) {
+            this.defenseIndex++;
+            this.renderDefenseBeat();
+          }
+        }
+      },
+
+      /* ======================================================================
+         STATION 2: F/P/U TUTORIAL & SPLIT AUDIT EXERCISE
+         ====================================================================== */
+      launchStation2Tutorial() {
+        this.currentStation = 'st2';
+        document.getElementById("hud-location-tag").innerText = "STATION 2: SINTA'S TRUTH TUTORIAL";
+        this.switchScreen('screen-st2-tutorial');
+        this.playVoice("audio/vo_sinta_02_truthcheck.mp3");
+      },
+
+      launchSt2Example() {
+        this.isExampleMode = true;
+        this.switchScreen('screen-st2-audit');
+        document.getElementById("hud-location-tag").innerText = "STATION 2: WORKED EXAMPLE";
+        document.getElementById("st2-audit-title").innerText = "WORKED EXAMPLE: Identify the AI Trap";
+        document.getElementById("st2-progress-badge").innerText = "GUIDED EXAMPLE";
+
+        document.getElementById("st2-audit-sentence").innerText = 
+          '"Our new verification checklist already helped 500 students find the right room without any mistakes."';
+
+        const fb = document.getElementById("st2-audit-feedback");
+        fb.style.display = "none";
+        document.getElementById("btn-st2-next").style.display = "none";
+      },
+
+      startSt2AuditExercise() {
+        this.isExampleMode = false;
+        this.auditIndex = 0;
+        this.auditScore = 0;
+        document.getElementById("hud-location-tag").innerText = "STATION 2: SPLIT-SCREEN AUDIT";
+        document.getElementById("st2-audit-title").innerText = "Audit AI Draft Against Case Brief";
+        this.renderAuditItem();
+      },
+
+      renderAuditItem() {
+        const item = this.auditQuestions[this.auditIndex];
+        document.getElementById("st2-progress-badge").innerText = `QUESTION ${this.auditIndex + 1} / 6`;
+        document.getElementById("st2-audit-sentence").innerText = `"${item.sentence}"`;
+
+        const fb = document.getElementById("st2-audit-feedback");
+        fb.style.display = "none";
+        document.getElementById("btn-st2-next").style.display = "none";
+      },
+
+      submitAuditAnswer(chosenType) {
+        const fb = document.getElementById("st2-audit-feedback");
+        const nextBtn = document.getElementById("btn-st2-next");
+        fb.style.display = "block";
+
+        if (this.isExampleMode) {
+          if (chosenType === 'U') {
+            fb.style.background = "rgba(16, 185, 129, 0.25)";
+            fb.style.color = "#34d399";
+            fb.innerText = "✅ BINGO! This is UNSUPPORTED (U). Check the brief on the left: NO trial occurred, so 500 students is fake AI data!";
+            this.playVoice("audio/vo_feedback_correct.mp3");
+            nextBtn.innerText = "START 6-QUESTION AUDIT EXERCISE >>";
+            nextBtn.style.display = "block";
+          } else {
+            fb.style.background = "rgba(239, 68, 68, 0.25)";
+            fb.style.color = "#f87171";
+            fb.innerText = "❌ Look at the left brief under 'Trial Record': 0 trials conducted! The AI invented this. It is Unsupported (U). Try again!";
+            this.playVoice("audio/vo_feedback_unsupported.mp3");
+          }
+          return;
+        }
+
+        const item = this.auditQuestions[this.auditIndex];
+        if (chosenType === item.correct) {
+          this.auditScore++;
+          fb.style.background = "rgba(16, 185, 129, 0.25)";
+          fb.style.color = "#34d399";
+          fb.innerText = `✅ MATCH: ${item.explanation}`;
+          this.playVoice("audio/vo_feedback_correct.mp3");
+        } else {
+          fb.style.background = "rgba(239, 68, 68, 0.25)";
+          fb.style.color = "#f87171";
+          fb.innerText = `❌ MISMATCH: Correct is [${item.correct}]. ${item.explanation}`;
+          this.playVoice("audio/vo_feedback_unsupported.mp3");
+        }
+
+        nextBtn.innerText = (this.auditIndex < 5) ? "NEXT SENTENCE >>" : "COMPLETE TRUTH AUDIT >>";
+        nextBtn.style.display = "block";
+      },
+
+      advanceAuditQuestion() {
+        if (this.isExampleMode) {
+          this.startSt2AuditExercise();
+          return;
+        }
+
+        this.auditIndex++;
+        if (this.auditIndex < this.auditQuestions.length) {
+          this.renderAuditItem();
+        } else {
+          this.unlockedStates.st2Cleared = true;
+          this.saveGameState();
+          alert("Truth Check Complete! Score: " + this.auditScore + " / 6. Sinta & Maya have verified the deck logic.\n\nStation 3: Garr Reynolds Studio is now unlocked in the Hub.");
+          this.openHub();
+        }
+      },
+
+      /* ======================================================================
+         STATION 3: GARR REYNOLDS THEORY & 3 DETAILED WORKED EXAMPLES
+         ====================================================================== */
+      launchStation3Theory() {
+        this.currentStation = 'st3_theory';
+        this.scriptIndex = 0;
+        document.getElementById("game-bg").style.backgroundImage = "url('images/bg_office_day.webp')";
+        document.getElementById("hud-location-tag").innerText = "STATION 3: GARR REYNOLDS THEORY";
+        document.getElementById("prop-card-overlay").style.display = "none";
+        this.switchScreen('screen-game');
+        this.renderSt3TheoryBeat();
+      },
+
+      renderSt3TheoryBeat() {
+        if (this.scriptIndex >= this.narrativeSt3Theory.length) {
+          this.launchStation3Builder();
+          return;
+        }
+
+        const beat = this.narrativeSt3Theory[this.scriptIndex];
+        document.getElementById("diag-speaker").innerText = beat.speaker.toUpperCase();
+        document.getElementById("diag-body").innerText = `"${beat.text}"`;
+
+        const sLeft = document.getElementById("sprite-left");
+        const sRight = document.getElementById("sprite-right");
+        sLeft.src = beat.spriteLeft;
+        sRight.src = beat.spriteRight;
+
+        sLeft.classList.remove("hidden");
+        sRight.classList.remove("hidden");
+
+        if (beat.activeSide === 'left') {
+          sLeft.classList.add("active");
+          sLeft.classList.remove("inactive");
+          sRight.classList.add("inactive");
+          sRight.classList.remove("active");
+        } else {
+          sRight.classList.add("active");
+          sRight.classList.remove("inactive");
+          sLeft.classList.add("inactive");
+          sLeft.classList.remove("active");
+        }
+
+        const theoryOverlay = document.getElementById("theory-card-overlay");
+        const theoryTitle = document.getElementById("theory-card-title");
+        const theoryBadge = document.getElementById("theory-card-badge");
+        const theoryBody = document.getElementById("theory-card-body");
+
+        if (beat.showTheory) {
+          theoryOverlay.style.display = "block";
+          theoryTitle.innerText = beat.showTheory.title;
+          theoryBadge.innerText = beat.showTheory.badge;
+          theoryBody.innerHTML = beat.showTheory.content;
+        } else {
+          theoryOverlay.style.display = "none";
+        }
+
+        if (beat.audio) this.playVoice(beat.audio);
+
+        const card = document.getElementById("vn-dialogue-card");
+        const choices = document.getElementById("diag-choices-pane");
+        choices.innerHTML = "";
+
+        if (beat.isTheoryEnd) {
+          card.classList.remove("single-pane");
+          const btn = document.createElement("button");
+          btn.className = "choice-btn";
+          btn.innerText = "START 3-CHIP BILLBOARD BUILDER >>";
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            document.getElementById("theory-card-overlay").style.display = "none";
+            this.launchStation3Builder();
+          };
+          choices.appendChild(btn);
+        } else {
+          card.classList.add("single-pane");
+        }
+      },
+
+      /* ======================================================================
+         STATION 3: 3-CHIP BILLBOARD BUILDER
+         ====================================================================== */
+      launchStation3Builder() {
+        this.currentStation = 'st3_builder';
+        this.selectedChips = [];
+        document.getElementById("hud-location-tag").innerText = "STATION 3: 3-CHIP BUILDER";
+        this.switchScreen('screen-st3-builder');
+        this.playVoice("audio/vo_maya_02_slide_strategy.mp3");
+        this.renderChipBank();
+        this.updateSlidePreview();
+      },
+
+      renderChipBank() {
+        const bank = document.getElementById("st3-chip-bank");
+        bank.innerHTML = "";
+
+        this.chipsData.forEach(chip => {
+          const btn = document.createElement("div");
+          btn.className = "data-chip" + (this.selectedChips.includes(chip.id) ? " selected" : "");
+          btn.id = `chip-btn-${chip.id}`;
+          btn.innerHTML = `<strong>[${chip.id}]</strong> ${chip.text} <span style="font-size:10px; opacity:0.8;">(${chip.words} words)</span>`;
+          btn.onclick = () => this.toggleChip(chip.id);
+          bank.appendChild(btn);
+        });
+      },
+
+      toggleChip(chipId) {
+        if (this.selectedChips.includes(chipId)) {
+          this.selectedChips = this.selectedChips.filter(id => id !== chipId);
+        } else {
+          if (this.selectedChips.length >= 3) {
+            alert("Slide face holds a maximum of 3 chips (≤ 15 words). Deselect a chip first!");
+            return;
+          }
+          this.selectedChips.push(chipId);
+        }
+        this.renderChipBank();
+        this.updateSlidePreview();
+      },
+
+      updateSlidePreview() {
+        const list = document.getElementById("slide2-bullet-list");
+        const badge = document.getElementById("st3-word-badge");
+        const confirmBtn = document.getElementById("btn-st3-confirm");
+        const feedback = document.getElementById("st3-builder-feedback");
+
+        list.innerHTML = "";
+        let totalWords = 0;
+
+        if (this.selectedChips.length === 0) {
+          list.innerHTML = `
+            <div style="color: #64748b;">• [Slot 1: Tap a Topic Chip below]</div>
+            <div style="color: #64748b;">• [Slot 2: Tap an Impact Chip below]</div>
+            <div style="color: #64748b;">• [Slot 3: Tap an Action Chip below]</div>
+          `;
+        } else {
+          this.selectedChips.forEach(id => {
+            const chip = this.chipsData.find(c => c.id === id);
+            totalWords += chip.words;
+            const el = document.createElement("div");
+            el.style.color = chip.isCore ? "#34d399" : "#f87171";
+            el.style.fontWeight = "700";
+            el.innerHTML = `• ${chip.text}`;
+            list.appendChild(el);
+          });
+        }
+
+        badge.innerText = `CURRENT: ${totalWords} / 15 WORDS`;
+
+        if (this.selectedChips.length === 3) {
+          const hasInvalid = this.selectedChips.some(id => !this.chipsData.find(c => c.id === id).isCore);
+          if (hasInvalid) {
+            badge.style.color = "#ef4444";
+            feedback.style.color = "#f87171";
+            const badChip = this.chipsData.find(c => this.selectedChips.includes(c.id) && !c.isCore);
+            feedback.innerText = `⚠️ ${badChip.reason}`;
+            confirmBtn.style.opacity = "0.5";
+            confirmBtn.style.pointerEvents = "none";
+          } else {
+            badge.style.color = "#10b981";
+            feedback.style.color = "#10b981";
+            feedback.innerText = `✅ PASSED! Exactly 14 words (≤ 15 words). Clean billboard achieved!`;
+            confirmBtn.style.opacity = "1";
+            confirmBtn.style.pointerEvents = "auto";
+          }
+        } else {
+          badge.style.color = "#60a5fa";
+          feedback.style.color = "#60a5fa";
+          feedback.innerText = `Select ${3 - this.selectedChips.length} more chip(s) to complete Slide 2.`;
+          confirmBtn.style.opacity = "0.5";
+          confirmBtn.style.pointerEvents = "none";
+        }
+      },
+
+      confirmSlide2Build() {
+        this.playVoice("audio/vo_feedback_prune.mp3");
+        this.unlockedStates.st3Cleared = true;
+        this.saveGameState();
+        alert("Billboard Rule Satisfied! Slide 2 is clean (14 words).\n\nStation 4: Committee Defense is now unlocked in the Hub.");
+        this.openHub();
+      },
+
+      /* ======================================================================
+         STATION 4: PREP BANTER + MR. HENDRA BOSS DEFENSE & TELEPROMPTER
+         ====================================================================== */
+      launchStation4Defense() {
+        this.currentStation = 'st4_defense';
+        this.defenseIndex = 0;
+        this.playBgm('audio/bgm_defense_ver2.mp3', 0.25);
+        document.getElementById("game-bg").style.backgroundImage = "url('images/bg_office_day.webp')";
+        document.getElementById("hud-location-tag").innerText = "STATION 4: COMMITTEE DEFENSE";
+        document.getElementById("prop-card-overlay").style.display = "none";
+        document.getElementById("theory-card-overlay").style.display = "none";
+        this.switchScreen('screen-game');
+        this.renderDefenseBeat();
+      },
+
+      renderDefenseBeat() {
+        const beat = this.defenseScript[this.defenseIndex];
+        document.getElementById("diag-speaker").innerText = beat.speaker.toUpperCase();
+        document.getElementById("diag-body").innerText = `"${beat.text}"`;
+
+        const sLeft = document.getElementById("sprite-left");
+        const sRight = document.getElementById("sprite-right");
+        sLeft.src = beat.spriteLeft;
+        sRight.src = beat.spriteRight;
+
+        sLeft.classList.remove("hidden");
+        sRight.classList.remove("hidden");
+
+        if (beat.activeSide === 'right') {
+          sRight.classList.add("active");
+          sRight.classList.remove("inactive");
+          sLeft.classList.add("inactive");
+          sLeft.classList.remove("active");
+        } else {
+          sLeft.classList.add("active");
+          sLeft.classList.remove("inactive");
+          sRight.classList.add("inactive");
+          sRight.classList.remove("active");
+        }
+
+        if (beat.audio) this.playVoice(beat.audio);
+
+        const card = document.getElementById("vn-dialogue-card");
+        const choices = document.getElementById("diag-choices-pane");
+        choices.innerHTML = "";
+
+        // If this is prep banter before Mr. Hendra enters:
+        if (beat.isPrepBanterEnd) {
+          card.classList.remove("single-pane");
+          const btn = document.createElement("button");
+          btn.className = "choice-btn";
+          btn.innerText = "ENTER COMMITTEE ROOM & FACE MR. HENDRA >>";
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            document.getElementById("game-bg").style.backgroundImage = "url('images/bg_meeting_room.webp')";
+            this.defenseIndex = 5; // Jump to Mr. Hendra's first Q
+            this.renderDefenseBeat();
+          };
+          choices.appendChild(btn);
+        } else if (beat.isPrepBanter) {
+          card.classList.add("single-pane");
+        } else if (beat.choices) {
+          // Hendra Q&A choices
+          card.classList.remove("single-pane");
+          beat.choices.forEach(ch => {
+            const btn = document.createElement("button");
+            btn.className = "choice-btn";
+            btn.innerHTML = `<strong>${ch.label}</strong><br><small style="opacity:0.85;">${ch.speechText.substring(0, 52)}...</small>`;
+            btn.onclick = () => this.handleDefenseAnswer(ch);
+            choices.appendChild(btn);
+          });
+        }
+      },
+
+      handleDefenseAnswer(choice) {
+        if (!choice.isCorrect) {
+          alert(choice.feedback);
+          this.playVoice("audio/vo_feedback_unsupported.mp3");
+          return;
+        }
+
+        // Show Maya delivering the answer on the dialogue stage
+        document.getElementById("diag-speaker").innerText = "MAYA (PRESENTER)";
+        document.getElementById("diag-body").innerText = `"${choice.speechText}"`;
+
+        const sLeft = document.getElementById("sprite-left");
+        const sRight = document.getElementById("sprite-right");
+        sLeft.classList.add("active");
+        sLeft.classList.remove("inactive");
+        sRight.classList.add("inactive");
+        sRight.classList.remove("active");
+
+        const choices = document.getElementById("diag-choices-pane");
+        choices.innerHTML = "";
+
+        const proceedBtn = document.createElement("button");
+        proceedBtn.className = "choice-btn";
+        proceedBtn.innerText = "CONTINUE >>";
+        proceedBtn.onclick = () => {
+          if (choice.isDefenseClear) {
+            this.completeDefenseSuccess();
+          } else {
+            this.defenseIndex = choice.nextIndex;
+            this.renderDefenseBeat();
+          }
+        };
+
+        if (choice.speechAudio) {
+          this.playVoice(choice.speechAudio, () => {});
+        }
+        choices.appendChild(proceedBtn);
+      },
+
+      completeDefenseSuccess() {
+        this.unlockedStates.st4Cleared = true;
+        this.saveGameState();
+        this.playBgm('audio/bgm_victory_ver2.mp3', 0.25);
+        this.playVoice("audio/vo_sinta_04_success.mp3");
+        alert("🏆 Mr. Hendra Approved the 1-Event Trial! Accessing Spoken Teleprompter Rehearsal.");
+        this.switchScreen('screen-teleprompter');
+      },
+
+      /* SMART MODEL PITCH AUDIO PLAYER: Uses restored .wav files */
+      playModelPitch(slideNum) {
+        const pitchAudioMap = {
+          1: "audio/vo_pitch_slide1.wav",
+          2: "audio/vo_pitch_slide2.wav",
+          3: "audio/vo_pitch_slide3.wav",
+          4: "audio/vo_pitch_slide4.wav",
+          5: "audio/vo_pitch_slide5.wav"
+        };
+        this.playVoice(pitchAudioMap[slideNum]);
+      },
+
+      /* ARTIFACT #3.1 OFFICIAL WORD .DOC EXPORTER */
+      exportArtifactDoc() {
+        const timestamp = new Date().toLocaleString("en-US");
+        const filename = `Artifact_3_1_${this.studentProfile.name.replace(/\s+/g, '_')}_Deck.doc`;
+
+        const docContent = `﻿<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'><title>Artifact #3.1 Presentation Deck Verification</title>
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #0f172a; line-height: 1.5; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; }
+  th, td { border: 1px solid #cbd5e1; padding: 8px 12px; }
+  th { background-color: #1e3a8a; color: white; text-align: left; }
+</style>
+</head>
+<body>
+  <h2>ENGLISH FOR OCCUPATIONAL PURPOSES &bull; ARTIFACT #3.1</h2>
+  <h3>Designing Professional Presentations &bull; Week 11 Portfolio</h3>
+  <p>Submission Timestamp: ${timestamp}</p>
+  <table>
+    <tr><th>FIELD</th><th>DETAILS</th></tr>
+    <tr><td><strong>Presenter Name:</strong></td><td>${this.studentProfile.name}</td></tr>
+    <tr><td><strong>Cohort / Class Group:</strong></td><td>${this.studentProfile.classId}</td></tr>
+    <tr><td><strong>Target Audience:</strong></td><td>Student Event Committee Chair (Mr. Hendra) &amp; 4 Coordinators</td></tr>
+    <tr><td><strong>Actionable Purpose Formula:</strong></td><td>To persuade the Event Committee to approve a 1-event trial of the pre-print checklist to eliminate poster errors.</td></tr>
+    <tr><td><strong>No-Slideument Rule:</strong></td><td>PASSED (All 5 slide faces &le; 15 words)</td></tr>
+    <tr><td><strong>F/P/U Logic Audit:</strong></td><td>VERIFIED (Untested benefits qualified using modal 'MAY')</td></tr>
+  </table>
+
+  <h3>5-SLIDE STORYBOARD &amp; SPOKEN TELEPROMPTER SCRIPT</h3>
+  <p><strong>[Slide 1: Purpose]</strong> Good morning. / Today I propose a 1-page digital checklist / to eliminate campus poster errors.</p>
+  <p><strong>[Slide 2: Problem]</strong> As you can see from this slide, / last week 15 students waited at Room 402 / because two posters listed different rooms.</p>
+  <p><strong>[Slide 3: Solution]</strong> Moving on to our propose solution, / we designed a simple verification checklist / requiring a 2nd-person check.</p>
+  <p><strong>[Slide 4: Trial Plan]</strong> Next, let us look at the trial plan. / This checklist MAY prevent errors. / We plan to test it for next week's webinar.</p>
+  <p><strong>[Slide 5: Action]</strong> To sum up, / we ask the committee to approve this 1-event trial / before printing Friday's posters.</p>
+
+  <h3>2-CHANGE REVISION LOG</h3>
+  <ul>
+    <li><strong>Change 1:</strong> Replaced the unsupported claim 'Checklist increased attendance 30%' with qualified proposal 'Checklist MAY improve consistency'.</li>
+    <li><strong>Change 2:</strong> Pruned Slide 2 text face from 42 words to 14 words using Garr Reynolds' 3-Chip Billboard Recipe, moving detailed explanation to phone teleprompter cue-cards.</li>
+  </ul>
+
+  <h3>ETHICAL AI DISCLOSURE STATEMENT</h3>
+  <p><em>"I used this interactive simulation application to rehearse the ABCD opening, Garr Reynolds' No-Slideument Rule, and timed oral teleprompter pacing. I performed independently during the committee defense."</em></p>
+</body>
+</html>`;
+
+        const blob = new Blob([docContent], { type: "application/msword;charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+      },
+
+      /* SAVE & LOAD PROGRESSION */
+      saveGameState() {
+        const state = {
+          profile: this.studentProfile,
+          unlocked: this.unlockedStates
+        };
+        localStorage.setItem("EOP_WEEK11_SAVE_V4", JSON.stringify(state));
+      },
+
+      loadSavedProgression() {
+        const raw = localStorage.getItem("EOP_WEEK11_SAVE_V4");
+        const contBtn = document.getElementById("btn-continue-save");
+        if (raw) {
+          contBtn.style.opacity = "1";
+          contBtn.style.pointerEvents = "auto";
+        } else {
+          contBtn.style.opacity = "0.4";
+          contBtn.style.pointerEvents = "none";
+        }
+      },
+
+      loadSavedGame() {
+        const raw = localStorage.getItem("EOP_WEEK11_SAVE_V4");
+        if (!raw) return;
+        const state = JSON.parse(raw);
+        this.studentProfile = state.profile;
+        this.unlockedStates = state.unlocked;
+        this.openHub();
+      }
+    };
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const splash = document.getElementById('screen-splash');
+        if (splash && splash.classList.contains('active')) {
+          e.preventDefault();
+          app.initializeExperience();
+          return;
+        }
+        const gameScreen = document.getElementById('screen-game');
+        if (gameScreen && gameScreen.classList.contains('active')) {
+          e.preventDefault();
+          app.handleDialogueAdvance();
+          return;
+        }
+      }
+    });
+
+    window.onload = () => app.init();
+  </script>
+</body>
+</html>
