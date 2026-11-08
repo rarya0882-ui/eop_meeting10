@@ -805,7 +805,53 @@
       font-weight: 800;
     }
 
-  </style>
+  
+    /* STATION 3: 15-SLIDE WORKSHOP RESPONSIVE GRID */
+    .st3-workshop-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 310px) 1fr;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 680px) {
+      .st3-workshop-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+
+    .st3-opt-btn {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      padding: 6px 10px;
+      color: #f1f5f9;
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 1.35;
+      text-align: left;
+      transition: all 0.15s ease;
+      white-space: pre-line;
+    }
+
+    .st3-opt-btn:hover, .st3-opt-btn:active {
+      border-color: var(--gold-accent);
+      background: rgba(45, 55, 75, 0.9);
+    }
+
+    .st3-opt-btn.correct {
+      background: rgba(16, 185, 129, 0.22) !important;
+      border-color: #10b981 !important;
+      color: #34d399 !important;
+    }
+
+    .st3-opt-btn.incorrect {
+      background: rgba(239, 68, 68, 0.22) !important;
+      border-color: #ef4444 !important;
+      color: #fca5a5 !important;
+    }
+</style>
 </head>
 <body>
 
@@ -931,7 +977,7 @@
             <div style="font-size: 10px; font-weight: 800; color: var(--gold-bright); margin-bottom: 4px;">STATION 3</div>
             <h3 style="font-size: 14.5px; font-weight: 800; margin-bottom: 4px;">Garr Reynolds Studio</h3>
             <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-              Master the No-Slideument rule through 3 worked examples and build a 14-word billboard.
+              Master the No-Slideument rule across 3 campus cases (15 slides) and build concise billboards (≤ 15 words).
             </p>
           </div>
           <div style="font-size: 11px; font-weight: 800; color: #94a3b8;" id="hub-status-st3">🔒 CLEAR STATION 2</div>
@@ -1093,46 +1139,63 @@
       </div>
     </div>
 
-    <!-- 6. STATION 3: 3-CHIP BILLBOARD BUILDER -->
+    <!-- 6. STATION 3: 15-SLIDE BILLBOARD ARCHITECTURE WORKSHOP -->
     <div id="screen-st3-builder" class="screen station-overlay-screen">
-      <div class="interactive-container">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--panel-border); padding-bottom: 6px;">
+      <div class="interactive-container" style="max-width: 900px;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--panel-border); padding-bottom: 5px;">
           <div>
-            <span class="title-tag">STATION 3 &bull; GARR REYNOLDS STUDIO</span>
-            <h2 style="font-size: 16px; font-weight: 800;">No-Slideument Rule: 3-Chip Billboard Builder</h2>
+            <span class="title-tag" id="st3-case-tag">CASE 1 &bull; THE POSTER ROOM CRISIS</span>
+            <h2 style="font-size: 15px; font-weight: 800; color: #fff;" id="st3-slide-title">Slide 1: Purpose (The Opening)</h2>
           </div>
-          <span id="st3-word-badge" style="font-size: 12px; font-weight: 800; color: var(--crimson-red);">CURRENT: 0 / 15 WORDS</span>
+          <span id="st3-progress-badge" style="font-size: 11px; font-weight: 800; color: var(--gold-accent);">SLIDE 1 / 5 &bull; QUESTION 1 / 15</span>
         </div>
 
-        <div style="background: rgba(30, 58, 138, 0.35); border: 1px solid var(--panel-border); border-radius: 8px; padding: 8px 12px; font-size: 11.5px;">
-          💡 <strong>Maya:</strong> "Garr Reynolds' rule: The slide face is a billboard (≤ 15 words). Tap the 3 essential data chips below. Leave emotional filler and irrelevant details out!"
-        </div>
+        <!-- Main Split Workspace: Left = Evidence & Live Slide Preview; Right = MCQ Options & Feedback -->
+        <div class="st3-workshop-grid">
+          <!-- LEFT COLUMN: EVIDENCE THUMBNAIL + 16:9 SLIDE PREVIEW -->
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Evidence Preview Card -->
+            <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(59, 130, 246, 0.4); border-radius: 9px; padding: 7px 10px; display: flex; gap: 10px; align-items: center;">
+              <img id="st3-prop-img" src="images/prop_poster_402.webp" alt="Case Evidence" style="width: 52px; height: 68px; object-fit: cover; border-radius: 6px; border: 1px solid var(--gold-accent); flex-shrink: 0;" />
+              <div>
+                <span style="font-size: 9.5px; font-weight: 800; color: var(--gold-bright); text-transform: uppercase;">CASE EVIDENCE FILE</span>
+                <p id="st3-evidence-desc" style="font-size: 10.5px; color: #cbd5e1; line-height: 1.35; margin-top: 2px;">Inspect the incident file to select the factual data points for your billboard.</p>
+              </div>
+            </div>
 
-        <div class="slide-preview-box">
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 4px;">
-            <strong style="color: var(--gold-accent); font-size: 12px;">SLIDE 2: VENUE DISCREPANCY CASE</strong>
-            <span style="font-size: 10px; color: var(--text-muted);">TARGET: &le; 15 WORDS</span>
+            <!-- 16:9 Slide Preview Frame -->
+            <div id="st3-slide-preview-frame" style="background: #020617; border: 2px solid var(--gold-accent); border-radius: 9px; padding: 10px 12px; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 3px;">
+                <strong id="st3-preview-header" style="color: var(--gold-accent); font-size: 11px; text-transform: uppercase;">SLIDE 1: PURPOSE</strong>
+                <span id="st3-preview-words" style="font-size: 10px; font-weight: 800; color: #94a3b8;">TARGET: &le; 15 WORDS</span>
+              </div>
+
+              <div id="st3-preview-content" style="font-size: 12px; line-height: 1.45; color: #fff; margin: 8px 0; min-height: 44px; white-space: pre-line;">
+                <span style="color:#64748b; font-style:italic;">[Tap an option on the right to test billboard wording]</span>
+              </div>
+
+              <div style="font-size: 9.5px; color: var(--text-muted); border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 3px;">
+                📱 <em>Full spoken narrative moves to Phone Teleprompter!</em>
+              </div>
+            </div>
           </div>
 
-          <div id="slide2-bullet-list" style="display: flex; flex-direction: column; gap: 4px; margin: 8px 0; font-size: 12px;">
-            <div style="color: #64748b;">• [Slot 1: Tap a Topic Chip below]</div>
-            <div style="color: #64748b;">• [Slot 2: Tap an Impact Chip below]</div>
-            <div style="color: #64748b;">• [Slot 3: Tap an Action Chip below]</div>
+          <!-- RIGHT COLUMN: QUESTION & OPTIONS A-D -->
+          <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 7px;">
+            <div>
+              <span style="font-size: 10.5px; font-weight: 800; color: var(--blue-glow); display: block; margin-bottom: 4px;">SELECT THE GARR REYNOLDS BILLBOARD (&le; 15 WORDS):</span>
+              <div id="st3-options-container" style="display: flex; flex-direction: column; gap: 5px;"></div>
+            </div>
+
+            <!-- Feedback & Next Button -->
+            <div>
+              <div id="st3-feedback-box" style="font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 7px; display: none; line-height: 1.35; margin-bottom: 5px;"></div>
+              <div style="display: flex; justify-content: flex-end;">
+                <button id="btn-st3-next" class="btn-main-gold" style="padding: 6px 18px; font-size: 11.5px; display: none;" onclick="app.advanceSt3Workshop()">NEXT SLIDE &gt;&gt;</button>
+              </div>
+            </div>
           </div>
-
-          <div style="font-size: 10.5px; color: var(--text-muted);">
-            📱 <em>Long explanations are moved to your phone teleprompter notes to speak out loud!</em>
-          </div>
-        </div>
-
-        <div>
-          <span style="font-size: 11px; font-weight: 700; color: var(--blue-glow);">AVAILABLE DATA CHIPS (Select 3):</span>
-          <div class="chip-bank-row" id="st3-chip-bank"></div>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
-          <span id="st3-builder-feedback" style="font-size: 11.5px; font-weight: 700; color: var(--blue-glow);">Select 3 chips to complete Slide 2.</span>
-          <button id="btn-st3-confirm" class="btn-main-gold" style="padding: 6px 18px; font-size: 11.5px; opacity: 0.5; pointer-events: none;" onclick="app.confirmSlide2Build()">CONFIRM SLIDE FACE &gt;&gt;</button>
         </div>
       </div>
     </div>
@@ -1380,15 +1443,611 @@
         }
       ],
 
-      /* STATION 3: 3-CHIP BILLBOARD BUILDER DATA */
-      selectedChips: [],
-      chipsData: [
-        { id: 'A', text: "Room 402 vs. 204 Discrepancy", words: 6, isCore: true, type: "Topic" },
-        { id: 'B', text: "15 Students Delayed at Venue", words: 5, isCore: true, type: "Impact" },
-        { id: 'C', text: "Our committee felt super stressed & tired", words: 7, isCore: false, reason: "Emotional filler! Keep feelings off slide faces." },
-        { id: 'D', text: "Mandatory Pre-Print Checklist", words: 3, isCore: true, type: "Action" },
-        { id: 'E', text: "Printers are in Building B basement", words: 6, isCore: false, reason: "Irrelevant detail! Location of printers doesn't matter." }
-      ],
+      /* STATION 3: 15-SLIDE BILLBOARD ARCHITECTURE WORKSHOP DATA */
+      st3Questions: [
+      {
+            "qIndex": 1,
+            "caseNum": 1,
+            "caseTitle": "CASE 1: THE POSTER ROOM CRISIS",
+            "caseTheme": "Campus Event Coordination",
+            "slideNum": 1,
+            "slideRole": "Slide 1: Purpose (The Opening)",
+            "image": "images/prop_poster_402.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 1?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "PURPOSE:\n\u2022 1-Page Pre-Print Checklist\n\u2022 Eliminates Poster Errors",
+                        "words": 9,
+                        "isCorrect": true,
+                        "explanation": "PASSED! Exactly 9 words. Clean topic and goal. Polite greetings and intro belong in your phone teleprompter!"
+                  },
+                  {
+                        "id": "B",
+                        "text": "Good morning Mr. Hendra and event committee members. Today our presentation team is introducing a proposal to create a pre-print digital verification form so that we can prevent wrong room numbers from being printed on flyers.",
+                        "words": 32,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 32 words is too long. The audience reads the screen like a book and ignores your voice!"
+                  },
+                  {
+                        "id": "C",
+                        "text": "Our committee is completely exhausted because mistakes on posters make us look bad.",
+                        "words": 12,
+                        "isCorrect": false,
+                        "explanation": "Emotional Blame Trap! Personal fatigue and embarrassment don't belong on an executive presentation slide."
+                  },
+                  {
+                        "id": "D",
+                        "text": "This checklist will permanently eliminate 100% of campus communication mistakes forever.",
+                        "words": 11,
+                        "isCorrect": false,
+                        "explanation": "Unsupported AI Trap! Never promise absolute perfection before conducting an official trial."
+                  }
+            ]
+      },
+      {
+            "qIndex": 2,
+            "caseNum": 1,
+            "caseTitle": "CASE 1: THE POSTER ROOM CRISIS",
+            "caseTheme": "Campus Event Coordination",
+            "slideNum": 2,
+            "slideRole": "Slide 2: Problem (The Incident)",
+            "image": "images/prop_poster_402.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 2?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "Last week during the campus tech webinar preparation, Poster A mistakenly announced Room 402 instead of Room 204, which caused fifteen students to wait outside locked doors for thirty minutes while our team scrambled to find the right keys.",
+                        "words": 40,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 40 words. You are writing narrative prose on a slide face instead of an anchor billboard."
+                  },
+                  {
+                        "id": "B",
+                        "text": "The graphic designer made a terrible mistake and nobody bothered to check it.",
+                        "words": 13,
+                        "isCorrect": false,
+                        "explanation": "Blame Trap! Focus on factual operational discrepancy, not assigning personal blame to colleagues."
+                  },
+                  {
+                        "id": "C",
+                        "text": "More than 500 students complained and boycotted our campus event last week.",
+                        "words": 11,
+                        "isCorrect": false,
+                        "explanation": "Unsupported Metric! The case brief says 15 students were delayed, not 500. Stick to verified facts."
+                  },
+                  {
+                        "id": "D",
+                        "text": "THE VENUE DISCREPANCY:\n\u2022 Poster A vs. Brief: Room 402 vs. 204\n\u2022 Impact: 15 Students Delayed",
+                        "words": 12,
+                        "isCorrect": true,
+                        "explanation": "PASSED! 12 words. Eyes look for key nouns and numbers: Room 402, 204, and 15 students. The story is spoken aloud!"
+                  }
+            ]
+      },
+      {
+            "qIndex": 3,
+            "caseNum": 1,
+            "caseTitle": "CASE 1: THE POSTER ROOM CRISIS",
+            "caseTheme": "Campus Event Coordination",
+            "slideNum": 3,
+            "slideRole": "Slide 3: Solution (The Workflow)",
+            "image": "images/prop_poster_204.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 3?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "We should make a checklist so people finally take their responsibilities seriously.",
+                        "words": 12,
+                        "isCorrect": false,
+                        "explanation": "Informal / Emotional Trap! Maintain professional tone; state the mechanism, not grievances."
+                  },
+                  {
+                        "id": "B",
+                        "text": "A checklist that makes human error mathematically impossible on campus.",
+                        "words": 10,
+                        "isCorrect": false,
+                        "explanation": "Unsupported Claim! No workflow eliminates human error 100%. Keep proposals grounded."
+                  },
+                  {
+                        "id": "C",
+                        "text": "PROPOSED SOLUTION:\n\u2022 1-Page Verification Checklist\n\u2022 Mandatory 2nd-Person Sign-Off",
+                        "words": 9,
+                        "isCorrect": true,
+                        "explanation": "PASSED! 9 words. Sharp, actionable, and executive-ready. The committee absorbs both points in 2 seconds!"
+                  },
+                  {
+                        "id": "D",
+                        "text": "To solve this recurring issue, our team proposes designing a simple digital checklist that requires two independent committee members to cross-check room numbers and dates against the official brief before files are sent to the printing press.",
+                        "words": 36,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 36 words. Detailed instructions belong in your spoken teleprompter notes, not on the slide."
+                  }
+            ]
+      },
+      {
+            "qIndex": 4,
+            "caseNum": 1,
+            "caseTitle": "CASE 1: THE POSTER ROOM CRISIS",
+            "caseTheme": "Campus Event Coordination",
+            "slideNum": 4,
+            "slideRole": "Slide 4: Trial Plan (The Pilot)",
+            "image": "images/prop_poster_204.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 4?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "Our pilot trial already boosted event attendance by 30% across campus.",
+                        "words": 11,
+                        "isCorrect": false,
+                        "explanation": "Unsupported Past Claim! The trial hasn't happened yet. Claiming past victory before testing is a fatal audit fail."
+                  },
+                  {
+                        "id": "B",
+                        "text": "TRIAL PLAN:\n\u2022 1-Event Pilot: Next Week's Webinar\n\u2022 MAY Prevent Future Discrepancies",
+                        "words": 10,
+                        "isCorrect": true,
+                        "explanation": "PASSED! 10 words. Ethically qualified with the modal 'MAY'. Low-risk testing invites approval from decision-makers."
+                  },
+                  {
+                        "id": "C",
+                        "text": "We recommend conducting a pilot test during next week's tech webinar where Sinta and Maya will test this two-person verification process on all promotional flyers to evaluate if errors are successfully reduced.",
+                        "words": 35,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 35 words. The committee doesn't need full sentences on screen."
+                  },
+                  {
+                        "id": "D",
+                        "text": "Let's just test it once so the chair stops questioning us.",
+                        "words": 11,
+                        "isCorrect": false,
+                        "explanation": "Disrespectful / Emotional Trap! Frame trials as constructive quality assurance, not avoiding questions."
+                  }
+            ]
+      },
+      {
+            "qIndex": 5,
+            "caseNum": 1,
+            "caseTitle": "CASE 1: THE POSTER ROOM CRISIS",
+            "caseTheme": "Campus Event Coordination",
+            "slideNum": 5,
+            "slideRole": "Slide 5: Action (The Closing Call)",
+            "image": "images/prop_poster_204.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 5?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "ACTION REQUESTED:\n\u2022 Approve 1-Event Trial\n\u2022 Deadline: Friday Printing",
+                        "words": 9,
+                        "isCorrect": true,
+                        "explanation": "PASSED! Exactly 9 words. Tells Mr. Hendra the exact decision needed and the time deadline."
+                  },
+                  {
+                        "id": "B",
+                        "text": "In conclusion, we respectfully ask Mr. Hendra and the committee to give official approval for this one-event pilot checklist before final printing begins this Friday at noon so we can proceed immediately.",
+                        "words": 33,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 33 words. Polite preamble ('In conclusion, we respectfully ask') is spoken orally."
+                  },
+                  {
+                        "id": "C",
+                        "text": "Please approve this today because we don't have enough time.",
+                        "words": 10,
+                        "isCorrect": false,
+                        "explanation": "Weak Plea! Professional executives ask for specific authorization with milestones, not desperation."
+                  },
+                  {
+                        "id": "D",
+                        "text": "Approve this and attendance will reach 1,000 students.",
+                        "words": 8,
+                        "isCorrect": false,
+                        "explanation": "Unsupported Promise! Don't tie a print checklist approval to fantasy attendance figures."
+                  }
+            ]
+      },
+      {
+            "qIndex": 6,
+            "caseNum": 2,
+            "caseTitle": "CASE 2: AUDITORIUM PROJECTOR FAILURE",
+            "caseTheme": "Classroom & AV Infrastructure",
+            "slideNum": 1,
+            "slideRole": "Slide 1: Purpose (The Opening)",
+            "image": "images/prop_projector_error.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 1?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "Good afternoon faculty board. Today we propose introducing a fifteen-minute mandatory audio-visual pre-flight inspection checklist for Auditorium B to ensure lecture slides project correctly without wasting students' valuable classroom learning time.",
+                        "words": 34,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 34 words. Speak the pleasantries; display only the core billboard anchor."
+                  },
+                  {
+                        "id": "B",
+                        "text": "Auditorium B equipment is ancient and driving all our lecturers crazy.",
+                        "words": 11,
+                        "isCorrect": false,
+                        "explanation": "Emotional Complaint! Venting frustration on a presentation slide undermines your proposal."
+                  },
+                  {
+                        "id": "C",
+                        "text": "A procedure guaranteeing no campus electronics will ever crash again.",
+                        "words": 10,
+                        "isCorrect": false,
+                        "explanation": "Unsupported Guarantee! Hardware will eventually wear out; promise prevention, not miracles."
+                  },
+                  {
+                        "id": "D",
+                        "text": "PURPOSE:\n\u2022 15-Minute AV Pre-Flight Checklist\n\u2022 Zero Lecture Delays",
+                        "words": 8,
+                        "isCorrect": true,
+                        "explanation": "PASSED! 8 words. Clear procedure (AV Checklist) and clear outcome (Zero Lecture Delays)."
+                  }
+            ]
+      },
+      {
+            "qIndex": 7,
+            "caseNum": 2,
+            "caseTitle": "CASE 2: AUDITORIUM PROJECTOR FAILURE",
+            "caseTheme": "Classroom & AV Infrastructure",
+            "slideNum": 2,
+            "slideRole": "Slide 2: Problem (The Incident)",
+            "image": "images/prop_projector_error.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 2?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "The AV technician didn't show up on time and left us helpless.",
+                        "words": 12,
+                        "isCorrect": false,
+                        "explanation": "Personal Blame Trap! Present technical root causes objectively without attacking support staff."
+                  },
+                  {
+                        "id": "B",
+                        "text": "Every projector in the university has completely stopped functioning this semester.",
+                        "words": 11,
+                        "isCorrect": false,
+                        "explanation": "Wild Exaggeration! State exact incident data for Auditorium B; don't make unsubstantiated campus-wide claims."
+                  },
+                  {
+                        "id": "C",
+                        "text": "THE AUDITORIUM B ISSUE:\n\u2022 Faulty HDMI & Resolution Mismatch\n\u2022 20-Minute Lecture Delay",
+                        "words": 11,
+                        "isCorrect": true,
+                        "explanation": "PASSED! 11 words. Root cause (HDMI/Resolution) and concrete operational impact (20 minutes lost)."
+                  },
+                  {
+                        "id": "D",
+                        "text": "During Monday's guest lecture in Auditorium B, the main overhead projector failed to detect the presenter's laptop HDMI connection due to unsupported display resolutions, delaying the entire keynote address by twenty minutes and frustrating fifty attendees.",
+                        "words": 37,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 37 words. The audience will spend half a minute reading rather than listening."
+                  }
+            ]
+      },
+      {
+            "qIndex": 8,
+            "caseNum": 2,
+            "caseTitle": "CASE 2: AUDITORIUM PROJECTOR FAILURE",
+            "caseTheme": "Classroom & AV Infrastructure",
+            "slideNum": 3,
+            "slideRole": "Slide 3: Solution (The Workflow)",
+            "image": "images/prop_adapter_kit.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 3?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "A magical cable adapter that works on any broken hardware.",
+                        "words": 10,
+                        "isCorrect": false,
+                        "explanation": "Unrealistic / Unprofessional! Present realistic technical equipment specifications."
+                  },
+                  {
+                        "id": "B",
+                        "text": "SOLUTION:\n\u2022 3-Point Cable & Resolution Check\n\u2022 Dedicated Backup Adapter Kit",
+                        "words": 8,
+                        "isCorrect": true,
+                        "explanation": "PASSED! 8 words. Immediate visual clarity: the 3-point check and the backup adapter kit."
+                  },
+                  {
+                        "id": "C",
+                        "text": "We propose establishing a three-point checklist requiring presenters to verify cable seating and display resolution fifteen minutes before class starts, along with stationing a locked storage pouch containing standard USB-C to HDMI adapters directly inside the lectern.",
+                        "words": 38,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 38 words. Move the setup instructions to your speaker notes."
+                  },
+                  {
+                        "id": "D",
+                        "text": "We need expensive brand-new projectors immediately instead of dealing with cables.",
+                        "words": 11,
+                        "isCorrect": false,
+                        "explanation": "Impractical Complaint! High-cost demands without testing low-cost solutions get rejected by leadership."
+                  }
+            ]
+      },
+      {
+            "qIndex": 9,
+            "caseNum": 2,
+            "caseTitle": "CASE 2: AUDITORIUM PROJECTOR FAILURE",
+            "caseTheme": "Classroom & AV Infrastructure",
+            "slideNum": 4,
+            "slideRole": "Slide 4: Trial Plan (The Pilot)",
+            "image": "images/prop_adapter_kit.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 4?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "TRIAL PLAN:\n\u2022 2-Week Pilot in Auditorium B\n\u2022 MAY Minimize Technical Interruptions",
+                        "words": 10,
+                        "isCorrect": true,
+                        "explanation": "PASSED! 10 words. Clear testing window (2 Weeks) and qualified benefit with modal 'MAY'."
+                  },
+                  {
+                        "id": "B",
+                        "text": "We plan to test this pre-flight checklist exclusively in Auditorium B for two consecutive weeks across all scheduled undergraduate courses to record whether equipment connection time and startup delays are successfully decreased.",
+                        "words": 33,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 33 words. Deliver the evaluation criteria orally."
+                  },
+                  {
+                        "id": "C",
+                        "text": "Let's try this so faculty members stop complaining to administration.",
+                        "words": 10,
+                        "isCorrect": false,
+                        "explanation": "Emotional Framing! Frame trials around academic continuity, not silencing complaints."
+                  },
+                  {
+                        "id": "D",
+                        "text": "This adapter kit has already solved all technical problems across Indonesia.",
+                        "words": 11,
+                        "isCorrect": false,
+                        "explanation": "Unsupported Metric! Stick strictly to your campus pilot plan."
+                  }
+            ]
+      },
+      {
+            "qIndex": 10,
+            "caseNum": 2,
+            "caseTitle": "CASE 2: AUDITORIUM PROJECTOR FAILURE",
+            "caseTheme": "Classroom & AV Infrastructure",
+            "slideNum": 5,
+            "slideRole": "Slide 5: Action (The Closing Call)",
+            "image": "images/prop_adapter_kit.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 5?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "Therefore, we urge the academic dean to approve a budget of 300,000 Rupiah for the backup adapter kit and authorize the two-week inspection pilot starting this coming Monday morning.",
+                        "words": 31,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 31 words. The financial breakdown belongs in your oral defense."
+                  },
+                  {
+                        "id": "B",
+                        "text": "Buy this now or classes will keep being ruined.",
+                        "words": 9,
+                        "isCorrect": false,
+                        "explanation": "Aggressive / Emotional Ultimatum! Persuade with evidence, never threaten decision-makers."
+                  },
+                  {
+                        "id": "C",
+                        "text": "Approve this to make our campus number one.",
+                        "words": 8,
+                        "isCorrect": false,
+                        "explanation": "Unsupported Slogan! Decision-makers need operational next steps, not hollow slogans."
+                  },
+                  {
+                        "id": "D",
+                        "text": "ACTION REQUESTED:\n\u2022 Authorize Lectern Adapter Kit\n\u2022 Trial Commences Monday",
+                        "words": 8,
+                        "isCorrect": true,
+                        "explanation": "PASSED! 8 words. Clean call-to-action with clear launch date."
+                  }
+            ]
+      },
+      {
+            "qIndex": 11,
+            "caseNum": 3,
+            "caseTitle": "CASE 3: BROKEN REGISTRATION LINK",
+            "caseTheme": "Digital Outreach & Verification",
+            "slideNum": 1,
+            "slideRole": "Slide 1: Purpose (The Opening)",
+            "image": "images/prop_form_restricted.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 1?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "Our social media team is humiliated because links never work properly.",
+                        "words": 11,
+                        "isCorrect": false,
+                        "explanation": "Emotional Embarrassment! Keep feelings off the slide. State objective quality standards."
+                  },
+                  {
+                        "id": "B",
+                        "text": "A system that guarantees 100% attendance on every form.",
+                        "words": 10,
+                        "isCorrect": false,
+                        "explanation": "Unsupported AI Trap! Valid links allow access, but cannot guarantee 100% turnout."
+                  },
+                  {
+                        "id": "C",
+                        "text": "PURPOSE:\n\u2022 2-Step Form Validation Protocol\n\u2022 Prevent Broken Registration Links",
+                        "words": 9,
+                        "isCorrect": true,
+                        "explanation": "PASSED! 9 words. Concrete protocol name and unambiguous organizational goal."
+                  },
+                  {
+                        "id": "D",
+                        "text": "Good morning student council. Today we are presenting a proposal for implementing a two-step Google Form verification protocol before broadcast messages are blasted on campus social media to eliminate dead registration link errors.",
+                        "words": 34,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 34 words. Don't crowd the slide face with spoken introductions."
+                  }
+            ]
+      },
+      {
+            "qIndex": 12,
+            "caseNum": 3,
+            "caseTitle": "CASE 3: BROKEN REGISTRATION LINK",
+            "caseTheme": "Digital Outreach & Verification",
+            "slideNum": 2,
+            "slideRole": "Slide 2: Problem (The Incident)",
+            "image": "images/prop_form_restricted.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 2?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "Millions of students tried to register and crashed Google's servers.",
+                        "words": 10,
+                        "isCorrect": false,
+                        "explanation": "Absurd / Unsupported Claim! Exaggerations destroy presenter credibility."
+                  },
+                  {
+                        "id": "B",
+                        "text": "THE REGISTRATION FAILURE:\n\u2022 Restricted Google Form Permissions\n\u2022 45 Inquiries Lost in First Hour",
+                        "words": 11,
+                        "isCorrect": true,
+                        "explanation": "PASSED! 11 words. Specific error cause (Restricted Permissions) and measured impact (45 inquiries lost)."
+                  },
+                  {
+                        "id": "C",
+                        "text": "When the committee broadcasted the registration flyer for the national seminar last Friday, the Google Form link was accidentally locked to internal domain accounts only, preventing forty-five external student participants from registering during the crucial first hour.",
+                        "words": 38,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 38 words. Tell the narrative aloud; display only key metrics on screen."
+                  },
+                  {
+                        "id": "D",
+                        "text": "The publicity coordinator was careless and shared a completely broken link everywhere.",
+                        "words": 12,
+                        "isCorrect": false,
+                        "explanation": "Personal Attack Trap! Address workflow vulnerability, not attacking team members."
+                  }
+            ]
+      },
+      {
+            "qIndex": 13,
+            "caseNum": 3,
+            "caseTitle": "CASE 3: BROKEN REGISTRATION LINK",
+            "caseTheme": "Digital Outreach & Verification",
+            "slideNum": 3,
+            "slideRole": "Slide 3: Solution (The Workflow)",
+            "image": "images/prop_qr_validation.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 3?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "SOLUTION:\n\u2022 Incognito Mode Permission Test\n\u2022 QR Code Live Destination Verification",
+                        "words": 9,
+                        "isCorrect": true,
+                        "explanation": "PASSED! 9 words. Two actionable verification checks anyone can follow in 30 seconds."
+                  },
+                  {
+                        "id": "B",
+                        "text": "Our solution requires whoever creates the flyer to perform an incognito browser permission test to verify public access, followed by scanning the generated QR code with a secondary smartphone to confirm it lands on the active form.",
+                        "words": 36,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 36 words. Put the detailed step-by-step instructions into your phone teleprompter."
+                  },
+                  {
+                        "id": "C",
+                        "text": "Just make sure people actually test their links before sending them.",
+                        "words": 11,
+                        "isCorrect": false,
+                        "explanation": "Vague / Colloquial Trap! Specify structured mechanisms (Incognito test, QR scan)."
+                  },
+                  {
+                        "id": "D",
+                        "text": "QR codes that fix their own broken link destinations.",
+                        "words": 9,
+                        "isCorrect": false,
+                        "explanation": "Technological Nonsense! Verification requires human inspection."
+                  }
+            ]
+      },
+      {
+            "qIndex": 14,
+            "caseNum": 3,
+            "caseTitle": "CASE 3: BROKEN REGISTRATION LINK",
+            "caseTheme": "Digital Outreach & Verification",
+            "slideNum": 4,
+            "slideRole": "Slide 4: Trial Plan (The Pilot)",
+            "image": "images/prop_qr_validation.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 4?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "We intend to run a trial of this two-step verification protocol tomorrow morning when announcing the leadership workshop, tracking whether all incoming registration entries successfully register without any access permission error reports.",
+                        "words": 34,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 34 words. Don't crowd the slide with tracking mechanics."
+                  },
+                  {
+                        "id": "B",
+                        "text": "Let's try it tomorrow so nobody gets yelled at.",
+                        "words": 9,
+                        "isCorrect": false,
+                        "explanation": "Informal / Emotional Trap! Maintain executive professionalism in all pilot proposals."
+                  },
+                  {
+                        "id": "C",
+                        "text": "This protocol has already tripled our follower count this week.",
+                        "words": 10,
+                        "isCorrect": false,
+                        "explanation": "Unsupported Past Metric! Untested protocols cannot claim past social media growth."
+                  },
+                  {
+                        "id": "D",
+                        "text": "TRIAL PLAN:\n\u2022 Test on Tomorrow's Workshop Blast\n\u2022 MAY Prevent Registration Bounces",
+                        "words": 9,
+                        "isCorrect": true,
+                        "explanation": "PASSED! 9 words. Clear target event and qualified prediction with modal 'MAY'."
+                  }
+            ]
+      },
+      {
+            "qIndex": 15,
+            "caseNum": 3,
+            "caseTitle": "CASE 3: BROKEN REGISTRATION LINK",
+            "caseTheme": "Digital Outreach & Verification",
+            "slideNum": 5,
+            "slideRole": "Slide 5: Action (The Closing Call)",
+            "image": "images/prop_qr_validation.webp",
+            "question": "Which option is the best GARR REYNOLDS BILLBOARD (\u2264 15 words) for Slide 5?",
+            "options": [
+                  {
+                        "id": "A",
+                        "text": "Agree to this now so we can stop stressing.",
+                        "words": 9,
+                        "isCorrect": false,
+                        "explanation": "Vague / Emotional Trap! Request operational mandates, not emotional relief."
+                  },
+                  {
+                        "id": "B",
+                        "text": "Mandate this and our event will trend nationwide.",
+                        "words": 8,
+                        "isCorrect": false,
+                        "explanation": "Unsupported Boast! Stick strictly to quality assurance outcomes."
+                  },
+                  {
+                        "id": "C",
+                        "text": "ACTION REQUESTED:\n\u2022 Mandate Validation for Tomorrow's Blast\n\u2022 Appoint 2 Verifiers",
+                        "words": 8,
+                        "isCorrect": true,
+                        "explanation": "PASSED! 8 words. Clear executive ask: mandate the protocol and assign 2 verifiers."
+                  },
+                  {
+                        "id": "D",
+                        "text": "We ask the council president to formally mandate this link verification protocol for tomorrow's social media release and officially appoint two committee members to complete the verification checklist before broadcast.",
+                        "words": 32,
+                        "isCorrect": false,
+                        "explanation": "Slideument Trap! 32 words. Speak the formal concluding plea out loud."
+                  }
+            ]
+      }
+],
+      st3CurrentQ: 0,
+      st3IsCurrentQCorrect: false,
 
       /* STATION 4 DEFENSE: PREP BANTER (Bridges Slide to Teleprompter) + MR. HENDRA BOSS Q&A */
       defenseIndex: 0,
@@ -1930,7 +2589,7 @@
 
       renderSt3TheoryBeat() {
         if (this.scriptIndex >= this.narrativeSt3Theory.length) {
-          this.launchStation3Builder();
+          this.launchStation3Workshop();
           return;
         }
 
@@ -1982,11 +2641,11 @@
           card.classList.remove("single-pane");
           const btn = document.createElement("button");
           btn.className = "choice-btn";
-          btn.innerText = "START 3-CHIP BILLBOARD BUILDER >>";
+          btn.innerText = "START 15-SLIDE BILLBOARD WORKSHOP >>";
           btn.onclick = (e) => {
             e.stopPropagation();
             document.getElementById("theory-card-overlay").style.display = "none";
-            this.launchStation3Builder();
+            this.launchStation3Workshop();
           };
           choices.appendChild(btn);
         } else {
@@ -1997,109 +2656,129 @@
       /* ======================================================================
          STATION 3: 3-CHIP BILLBOARD BUILDER
          ====================================================================== */
-      launchStation3Builder() {
+      launchStation3Workshop() {
         this.currentStation = 'st3_builder';
-        this.selectedChips = [];
-        document.getElementById("hud-location-tag").innerText = "STATION 3: 3-CHIP BUILDER";
+        this.st3CurrentQ = 0;
+        this.st3IsCurrentQCorrect = false;
+        document.getElementById("hud-location-tag").innerText = "STATION 3: 15-SLIDE BILLBOARD WORKSHOP";
         this.switchScreen('screen-st3-builder');
-        this.playVoice("audio/vo_maya_02_slide_strategy.mp3");
-        this.renderChipBank();
-        this.updateSlidePreview();
+        this.renderSt3WorkshopQuestion();
       },
 
-      renderChipBank() {
-        const bank = document.getElementById("st3-chip-bank");
-        bank.innerHTML = "";
+      renderSt3WorkshopQuestion() {
+        const q = this.st3Questions[this.st3CurrentQ];
+        this.st3IsCurrentQCorrect = false;
 
-        this.chipsData.forEach(chip => {
-          const btn = document.createElement("div");
-          btn.className = "data-chip" + (this.selectedChips.includes(chip.id) ? " selected" : "");
-          btn.id = `chip-btn-${chip.id}`;
-          btn.innerHTML = `<strong>[${chip.id}]</strong> ${chip.text} <span style="font-size:10px; opacity:0.8;">(${chip.words} words)</span>`;
-          btn.onclick = () => this.toggleChip(chip.id);
-          bank.appendChild(btn);
+        document.getElementById("st3-case-tag").innerText = `${q.caseTitle} • ${q.caseTheme.toUpperCase()}`;
+        document.getElementById("st3-slide-title").innerText = q.slideRole;
+        document.getElementById("st3-progress-badge").innerText = `SLIDE ${q.slideNum} / 5 • QUESTION ${q.qIndex} / 15`;
+
+        const propImg = document.getElementById("st3-prop-img");
+        if (propImg) propImg.src = q.image;
+
+        const previewHeader = document.getElementById("st3-preview-header");
+        if (previewHeader) previewHeader.innerText = q.slideRole.split('(')[0].trim();
+
+        const previewWords = document.getElementById("st3-preview-words");
+        if (previewWords) {
+          previewWords.innerText = "TARGET: ≤ 15 WORDS";
+          previewWords.style.color = "#94a3b8";
+        }
+
+        const previewFrame = document.getElementById("st3-slide-preview-frame");
+        if (previewFrame) previewFrame.style.borderColor = "var(--gold-accent)";
+
+        const previewContent = document.getElementById("st3-preview-content");
+        if (previewContent) {
+          previewContent.innerHTML = '<span style="color:#64748b; font-style:italic;">[Tap an option on the right to test billboard wording]</span>';
+        }
+
+        const optionsContainer = document.getElementById("st3-options-container");
+        optionsContainer.innerHTML = "";
+
+        q.options.forEach(opt => {
+          const btn = document.createElement("button");
+          btn.className = "st3-opt-btn";
+          btn.id = `st3-opt-${opt.id}`;
+          btn.innerHTML = `<strong>[Option ${opt.id}]</strong> (${opt.words} words)<br>${opt.text.replace(/\n/g, '<br>')}`;
+          btn.onclick = () => this.selectSt3Option(opt.id);
+          optionsContainer.appendChild(btn);
         });
+
+        const feedbackBox = document.getElementById("st3-feedback-box");
+        feedbackBox.style.display = "none";
+
+        const nextBtn = document.getElementById("btn-st3-next");
+        nextBtn.style.display = "none";
       },
 
-      toggleChip(chipId) {
-        if (this.selectedChips.includes(chipId)) {
-          this.selectedChips = this.selectedChips.filter(id => id !== chipId);
-        } else {
-          if (this.selectedChips.length >= 3) {
-            alert("Slide face holds a maximum of 3 chips (≤ 15 words). Deselect a chip first!");
-            return;
+      selectSt3Option(optId) {
+        const q = this.st3Questions[this.st3CurrentQ];
+        const opt = q.options.find(o => o.id === optId);
+        if (!opt) return;
+
+        q.options.forEach(o => {
+          const el = document.getElementById(`st3-opt-${o.id}`);
+          if (el) {
+            el.classList.remove("correct", "incorrect");
           }
-          this.selectedChips.push(chipId);
-        }
-        this.renderChipBank();
-        this.updateSlidePreview();
-      },
+        });
 
-      updateSlidePreview() {
-        const list = document.getElementById("slide2-bullet-list");
-        const badge = document.getElementById("st3-word-badge");
-        const confirmBtn = document.getElementById("btn-st3-confirm");
-        const feedback = document.getElementById("st3-builder-feedback");
+        const selectedEl = document.getElementById(`st3-opt-${opt.id}`);
+        const feedbackBox = document.getElementById("st3-feedback-box");
+        const nextBtn = document.getElementById("btn-st3-next");
+        const previewContent = document.getElementById("st3-preview-content");
+        const previewWords = document.getElementById("st3-preview-words");
+        const previewFrame = document.getElementById("st3-slide-preview-frame");
 
-        list.innerHTML = "";
-        let totalWords = 0;
+        feedbackBox.style.display = "block";
+        previewContent.innerHTML = opt.text.replace(/\n/g, '<br>');
+        previewWords.innerText = `COUNT: ${opt.words} / 15 WORDS`;
 
-        if (this.selectedChips.length === 0) {
-          list.innerHTML = `
-            <div style="color: #64748b;">• [Slot 1: Tap a Topic Chip below]</div>
-            <div style="color: #64748b;">• [Slot 2: Tap an Impact Chip below]</div>
-            <div style="color: #64748b;">• [Slot 3: Tap an Action Chip below]</div>
-          `;
+        if (opt.isCorrect) {
+          this.st3IsCurrentQCorrect = true;
+          if (selectedEl) selectedEl.classList.add("correct");
+          if (previewFrame) previewFrame.style.borderColor = "#10b981";
+          previewWords.style.color = "#10b981";
+
+          feedbackBox.style.background = "rgba(16, 185, 129, 0.22)";
+          feedbackBox.style.border = "1px solid #10b981";
+          feedbackBox.style.color = "#34d399";
+          feedbackBox.innerHTML = `✅ <strong>BINGO! [Option ${opt.id}] (${opt.words} words):</strong> ${opt.explanation}`;
+          this.playVoice("audio/vo_feedback_correct.mp3");
+
+          nextBtn.innerText = (this.st3CurrentQ === 14) ? "FINISH 15-SLIDE WORKSHOP >>" : "NEXT SLIDE >>";
+          nextBtn.style.display = "block";
         } else {
-          this.selectedChips.forEach(id => {
-            const chip = this.chipsData.find(c => c.id === id);
-            totalWords += chip.words;
-            const el = document.createElement("div");
-            el.style.color = chip.isCore ? "#34d399" : "#f87171";
-            el.style.fontWeight = "700";
-            el.innerHTML = `• ${chip.text}`;
-            list.appendChild(el);
-          });
+          this.st3IsCurrentQCorrect = false;
+          if (selectedEl) selectedEl.classList.add("incorrect");
+          if (previewFrame) previewFrame.style.borderColor = "#ef4444";
+          previewWords.style.color = "#f87171";
+
+          feedbackBox.style.background = "rgba(239, 68, 68, 0.22)";
+          feedbackBox.style.border = "1px solid #ef4444";
+          feedbackBox.style.color = "#fca5a5";
+          feedbackBox.innerHTML = `❌ <strong>[Option ${opt.id}] (${opt.words} words):</strong> ${opt.explanation} <em>Try again and pick the true billboard!</em>`;
+          this.playVoice("audio/vo_feedback_unsupported.mp3");
+
+          nextBtn.style.display = "none";
         }
+      },
 
-        badge.innerText = `CURRENT: ${totalWords} / 15 WORDS`;
+      advanceSt3Workshop() {
+        if (!this.st3IsCurrentQCorrect) return;
 
-        if (this.selectedChips.length === 3) {
-          const hasInvalid = this.selectedChips.some(id => !this.chipsData.find(c => c.id === id).isCore);
-          if (hasInvalid) {
-            badge.style.color = "#ef4444";
-            feedback.style.color = "#f87171";
-            const badChip = this.chipsData.find(c => this.selectedChips.includes(c.id) && !c.isCore);
-            feedback.innerText = `⚠️ ${badChip.reason}`;
-            confirmBtn.style.opacity = "0.5";
-            confirmBtn.style.pointerEvents = "none";
-          } else {
-            badge.style.color = "#10b981";
-            feedback.style.color = "#10b981";
-            feedback.innerText = `✅ PASSED! Exactly 14 words (≤ 15 words). Clean billboard achieved!`;
-            confirmBtn.style.opacity = "1";
-            confirmBtn.style.pointerEvents = "auto";
-          }
+        if (this.st3CurrentQ < 14) {
+          this.st3CurrentQ++;
+          this.renderSt3WorkshopQuestion();
         } else {
-          badge.style.color = "#60a5fa";
-          feedback.style.color = "#60a5fa";
-          feedback.innerText = `Select ${3 - this.selectedChips.length} more chip(s) to complete Slide 2.`;
-          confirmBtn.style.opacity = "0.5";
-          confirmBtn.style.pointerEvents = "none";
+          this.unlockedStates.st3Cleared = true;
+          this.saveGameState();
+          alert("🏆 15-Slide Presentation Architecture Workshop Complete!\n\nYou have mastered Garr Reynolds' No-Slideument Rule across all 3 campus scenarios.\n\nStation 4: Committee Defense & Teleprompter is now unlocked in the Hub.");
+          this.openHub();
         }
       },
 
-      confirmSlide2Build() {
-        this.playVoice("audio/vo_feedback_prune.mp3");
-        this.unlockedStates.st3Cleared = true;
-        this.saveGameState();
-        alert("Billboard Rule Satisfied! Slide 2 is clean (14 words).\n\nStation 4: Committee Defense is now unlocked in the Hub.");
-        this.openHub();
-      },
-
-      /* ======================================================================
-         STATION 4: PREP BANTER + MR. HENDRA BOSS DEFENSE & TELEPROMPTER
-         ====================================================================== */
       launchStation4Defense() {
         this.currentStation = 'st4_defense';
         this.defenseIndex = 0;
